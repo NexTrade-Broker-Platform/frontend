@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+#root {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+}
