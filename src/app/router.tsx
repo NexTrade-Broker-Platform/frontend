@@ -7,7 +7,7 @@ import { NewsPage } from "../features/dashboard/pages/NewsPage";
 import { PortfolioPage } from "../features/dashboard/pages/PortfolioPage";
 import { StockDetailPage } from "../features/dashboard/pages/StockDetailPage";
 import { WalletPage } from "../features/dashboard/pages/WalletPage";
-import { LandingPage } from "../features/landing/pages/LandingPage";
+import { LandingPage } from "../features/landing/views/LandingPage";
 import { ProtectedRoute } from "../shared/components/ProtectedRoute";
 import { isAuthenticated } from "../shared/lib/auth";
 
