@@ -22,7 +22,7 @@ export function HeroContent() {
         <OpenAccountButton />
         <button
           className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold transition hover:bg-accent hover:text-accent-foreground"
-          onClick={() => navigate("/auth")}
+          onClick={() => navigate("/login")}
         >
           Log in
         </button>

@@ -12,7 +12,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { clearAuthenticated } from "../../../shared/lib/auth";
+import { authManager } from "../../auth/services/authManager";
 import { useTheme } from "../../../shared/providers/ThemeProvider";
 
 export function DashboardLayout() {
@@ -32,8 +32,7 @@ export function DashboardLayout() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const handleLogout = () => {
-    clearAuthenticated();
-    navigate("/auth", { replace: true });
+    authManager.logout().finally(() => navigate("/login", { replace: true }));
   };
 
   return (

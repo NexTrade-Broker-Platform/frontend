@@ -17,7 +17,7 @@ export function OpenAccountButton({ label = "Open Account", size = "md" }: OpenA
   return (
     <button
       className={`rounded-xl bg-primary ${sizeClasses[size]} text-sm font-semibold text-primary-foreground transition hover:bg-primary/90`}
-      onClick={() => navigate("/auth")}
+      onClick={() => navigate("/signup")}
     >
       {label}
     </button>
