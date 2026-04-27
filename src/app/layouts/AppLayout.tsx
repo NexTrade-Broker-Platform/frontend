@@ -12,10 +12,10 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { authManager } from "../../auth/services/authManager";
-import { useTheme } from "../../../shared/providers/ThemeProvider";
+import { authManager } from "@/features/auth/services/authManager";
+import { useTheme } from "@/shared/providers/ThemeProvider";
 
-export function DashboardLayout() {
+export function AppLayout() {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ export function DashboardLayout() {
         <div className="flex h-full flex-col">
           <div className="flex h-16 items-center border-b border-border px-6">
             <h1 className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
-              TradeFlow
+              Lynx Broker
             </h1>
           </div>
 

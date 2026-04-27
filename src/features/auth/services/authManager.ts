@@ -1,16 +1,26 @@
 import axios from "axios";
-import { clearAuthenticated, markAuthenticated, storeToken } from "@/shared/lib/auth";
+import {
+  clearAuthenticated,
+  markAuthenticated,
+  storeToken,
+} from "@/shared/lib/auth";
 import { mapAuthResponse } from "@/features/auth/utils/authMappers";
 import { authRepository } from "./authRepository";
-import type { AuthResult, LoginFormData, RegisterFormData } from "@/features/auth/types/auth";
+import type {
+  AuthResult,
+  LoginFormData,
+  RegisterFormData,
+} from "@/features/auth/types/auth";
 
 function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const serverMessage = error.response?.data?.error?.message;
     if (typeof serverMessage === "string") return serverMessage;
-    if (error.response?.status === 409) return "An account with this email already exists.";
+    if (error.response?.status === 409)
+      return "An account with this email already exists.";
     if (error.response?.status === 401) return "Invalid email or password.";
-    if (error.response?.status === 400) return "Please check your input and try again.";
+    if (error.response?.status === 400)
+      return "Please check your input and try again.";
   }
   return "An unexpected error occurred. Please try again.";
 }

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router";
 import {
+  AlertCircle,
   ArrowDownRight,
   ArrowLeft,
   ArrowUpRight,
+  Loader2,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -17,31 +19,73 @@ import {
   YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import { mockStocks } from "../model/mockData";
-const priceHistory = [
-  { time: "9:30", price: 180.45 },
-  { time: "10:00", price: 181.2 },
-  { time: "10:30", price: 180.9 },
-  { time: "11:00", price: 181.8 },
-  { time: "11:30", price: 182.1 },
-  { time: "12:00", price: 181.5 },
-  { time: "12:30", price: 182.45 },
-];
+import { useStockDetail } from "@/features/markets/hooks/useStockDetail";
+import { usePlaceOrder } from "@/features/orders/hooks/usePlaceOrder";
+import type { InstrumentType, OrderSide, OrderType } from "@/features/orders/types/orders";
 
 export function StockDetailPage() {
-  const { symbol } = useParams<{ symbol: string }>();
-  const stock = mockStocks.find((s) => s.symbol === symbol);
+  const { ticker } = useParams<{ ticker: string }>();
+  const { data: stockDetail, isLoading, isError, error } = useStockDetail(ticker!);
+  const { mutate: placeOrder, isPending: isPlacing } = usePlaceOrder();
 
-  const [orderType, setOrderType] = useState<"market" | "limit">("market");
-  const [action, setAction] = useState<"buy" | "sell">("buy");
+  const [orderType, setOrderType] = useState<OrderType>("MARKET");
+  const [side, setSide] = useState<OrderSide>("BUY");
   const [quantity, setQuantity] = useState("");
   const [limitPrice, setLimitPrice] = useState("");
 
-  if (!stock) {
+  const stock = stockDetail?.stock;
+
+  const handleSubmitOrder = (e: FormEvent) => {
+    e.preventDefault();
+    if (!stock) return;
+    const qty = parseInt(quantity, 10);
+    if (!qty || qty <= 0) {
+      toast.error("Please enter a valid quantity");
+      return;
+    }
+    if (orderType === "LIMIT" && (!limitPrice || parseFloat(limitPrice) <= 0)) {
+      toast.error("Please enter a valid limit price");
+      return;
+    }
+
+    placeOrder(
+      {
+        instrumentType: "STOCK" as InstrumentType,
+        instrumentId: stock.ticker,
+        orderType,
+        side,
+        quantity: qty,
+        limitPrice: orderType === "LIMIT" ? parseFloat(limitPrice) : undefined,
+      },
+      {
+        onSuccess: (order) => {
+          toast.success(
+            `${side === "BUY" ? "Buy" : "Sell"} order placed for ${qty} × ${stock.ticker} (${order.status})`,
+          );
+          setQuantity("");
+          setLimitPrice("");
+        },
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isError || !stock) {
     return (
       <div className="flex h-full items-center justify-center p-8">
         <div className="text-center">
-          <h2 className="mb-2">Stock not found</h2>
+          <AlertCircle className="mx-auto mb-3 size-10 text-destructive" />
+          <p className="mb-4 text-muted-foreground">
+            {(error as Error)?.message ?? "Stock not found"}
+          </p>
           <Link to="/markets" className="text-primary hover:underline">
             Back to Markets
           </Link>
@@ -50,28 +94,9 @@ export function StockDetailPage() {
     );
   }
 
-  const handleSubmitOrder = (e: FormEvent) => {
-    e.preventDefault();
-    const qty = parseInt(quantity, 10);
-    if (qty <= 0) {
-      toast.error("Please enter a valid quantity");
-      return;
-    }
-    if (orderType === "limit" && (!limitPrice || parseFloat(limitPrice) <= 0)) {
-      toast.error("Please enter a valid limit price");
-      return;
-    }
-
-    const price = orderType === "market" ? stock.price : parseFloat(limitPrice);
-    const total = qty * price;
-
-    toast.success(
-      `${action === "buy" ? "Buy" : "Sell"} order placed: ${qty} shares of ${stock.symbol} at $${price.toFixed(2)} (Total: $${total.toFixed(2)})`,
-    );
-
-    setQuantity("");
-    setLimitPrice("");
-  };
+  const estimatedTotal =
+    (parseInt(quantity, 10) || 0) *
+    (orderType === "MARKET" ? stock.currentPrice : parseFloat(limitPrice) || 0);
 
   return (
     <div className="p-4 lg:p-8">
@@ -87,15 +112,9 @@ export function StockDetailPage() {
         <div className="lg:col-span-2">
           <div className="mb-6">
             <div className="mb-2 flex items-center gap-3">
-              <h1>{stock.symbol}</h1>
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs ${
-                  stock.type === "stock"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-chart-2/10 text-chart-2"
-                }`}
-              >
-                {stock.type}
+              <h1>{stock.ticker}</h1>
+              <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
+                {stock.sector}
               </span>
             </div>
             <p className="text-muted-foreground">{stock.name}</p>
@@ -103,7 +122,7 @@ export function StockDetailPage() {
 
           <div className="mb-6 flex items-end gap-4">
             <div>
-              <div className="mb-1 text-4xl">${stock.price.toFixed(2)}</div>
+              <div className="mb-1 text-4xl">${stock.currentPrice.toFixed(2)}</div>
               <div
                 className={`flex items-center gap-1 ${
                   stock.change >= 0 ? "text-success" : "text-destructive"
@@ -116,8 +135,7 @@ export function StockDetailPage() {
                 )}
                 <span>
                   {stock.change >= 0 ? "+" : ""}
-                  {stock.change.toFixed(2)} (
-                  {stock.changePercent >= 0 ? "+" : ""}
+                  {stock.change.toFixed(2)} ({stock.changePercent >= 0 ? "+" : ""}
                   {stock.changePercent.toFixed(2)}%)
                 </span>
               </div>
@@ -127,64 +145,62 @@ export function StockDetailPage() {
           <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="mb-1 text-sm text-muted-foreground">Volume</div>
-              <div className="text-foreground">{stock.volume}</div>
+              <div className="text-foreground">{stock.volume.toLocaleString()}</div>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-1 text-sm text-muted-foreground">
-                Market Cap
-              </div>
-              <div className="text-foreground">{stock.marketCap}</div>
+              <div className="mb-1 text-sm text-muted-foreground">Open</div>
+              <div className="text-foreground">${stock.openPrice.toFixed(2)}</div>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-1 text-sm text-muted-foreground">24h High</div>
-              <div className="text-success">${stock.high24h?.toFixed(2)}</div>
+              <div className="mb-1 text-sm text-muted-foreground">High</div>
+              <div className="text-success">${stock.highPrice.toFixed(2)}</div>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-1 text-sm text-muted-foreground">24h Low</div>
-              <div className="text-destructive">
-                ${stock.low24h?.toFixed(2)}
-              </div>
+              <div className="mb-1 text-sm text-muted-foreground">Low</div>
+              <div className="text-destructive">${stock.lowPrice.toFixed(2)}</div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-6">
-            <h3 className="mb-6">Price Chart (Today)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={priceHistory}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="time" stroke="var(--muted-foreground)" />
-                <YAxis
-                  domain={["dataMin - 1", "dataMax + 1"]}
-                  stroke="var(--muted-foreground)"
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="price"
-                  stroke={stock.change >= 0 ? "#10b981" : "#ef4444"}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          {stockDetail.chartData.length > 0 && (
+            <div className="rounded-xl border border-border bg-card p-6">
+              <h3 className="mb-6">Price Chart</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stockDetail.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="time" stroke="var(--muted-foreground)" />
+                  <YAxis
+                    domain={["dataMin - 1", "dataMax + 1"]}
+                    stroke="var(--muted-foreground)"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="price"
+                    stroke={stock.change >= 0 ? "#10b981" : "#ef4444"}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
         <div>
           <div className="sticky top-8 rounded-xl border border-border bg-card p-6">
             <h3 className="mb-6">Place Order</h3>
 
-            <div className="mb-6 inline-flex w-full rounded-lg border border-border bg-muted/50 p-1">
+            <div className="mb-4 inline-flex w-full rounded-lg border border-border bg-muted/50 p-1">
               <button
-                onClick={() => setAction("buy")}
+                onClick={() => setSide("BUY")}
                 className={`flex-1 rounded-md px-4 py-2 transition-colors ${
-                  action === "buy"
+                  side === "BUY"
                     ? "bg-success text-success-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -192,9 +208,9 @@ export function StockDetailPage() {
                 Buy
               </button>
               <button
-                onClick={() => setAction("sell")}
+                onClick={() => setSide("SELL")}
                 className={`flex-1 rounded-md px-4 py-2 transition-colors ${
-                  action === "sell"
+                  side === "SELL"
                     ? "bg-destructive text-destructive-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -205,15 +221,13 @@ export function StockDetailPage() {
 
             <form onSubmit={handleSubmitOrder} className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm text-foreground">
-                  Order Type
-                </label>
+                <label className="mb-2 block text-sm text-foreground">Order Type</label>
                 <div className="inline-flex w-full rounded-lg border border-border bg-muted/50 p-1">
                   <button
                     type="button"
-                    onClick={() => setOrderType("market")}
+                    onClick={() => setOrderType("MARKET")}
                     className={`flex-1 rounded-md px-4 py-2 text-sm transition-colors ${
-                      orderType === "market"
+                      orderType === "MARKET"
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -222,9 +236,9 @@ export function StockDetailPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setOrderType("limit")}
+                    onClick={() => setOrderType("LIMIT")}
                     className={`flex-1 rounded-md px-4 py-2 text-sm transition-colors ${
-                      orderType === "limit"
+                      orderType === "LIMIT"
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
@@ -235,10 +249,7 @@ export function StockDetailPage() {
               </div>
 
               <div>
-                <label
-                  htmlFor="quantity"
-                  className="mb-2 block text-sm text-foreground"
-                >
+                <label htmlFor="quantity" className="mb-2 block text-sm text-foreground">
                   Quantity
                 </label>
                 <input
@@ -253,12 +264,9 @@ export function StockDetailPage() {
                 />
               </div>
 
-              {orderType === "limit" && (
+              {orderType === "LIMIT" && (
                 <div>
-                  <label
-                    htmlFor="limitPrice"
-                    className="mb-2 block text-sm text-foreground"
-                  >
+                  <label htmlFor="limitPrice" className="mb-2 block text-sm text-foreground">
                     Limit Price
                   </label>
                   <input
@@ -278,27 +286,15 @@ export function StockDetailPage() {
               {quantity && (
                 <div className="rounded-lg bg-muted/50 p-4">
                   <div className="mb-2 flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Estimated Total
-                    </span>
-                    <span className="text-foreground">
-                      $
-                      {(
-                        (parseInt(quantity, 10) || 0) *
-                        (orderType === "market"
-                          ? stock.price
-                          : parseFloat(limitPrice) || 0)
-                      ).toFixed(2)}
-                    </span>
+                    <span className="text-muted-foreground">Estimated Total</span>
+                    <span className="text-foreground">${estimatedTotal.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Price per share
-                    </span>
+                    <span className="text-muted-foreground">Price per share</span>
                     <span className="text-foreground">
                       $
-                      {orderType === "market"
-                        ? stock.price.toFixed(2)
+                      {orderType === "MARKET"
+                        ? stock.currentPrice.toFixed(2)
                         : (parseFloat(limitPrice) || 0).toFixed(2)}
                     </span>
                   </div>
@@ -307,22 +303,21 @@ export function StockDetailPage() {
 
               <button
                 type="submit"
-                className={`w-full rounded-lg px-4 py-3 text-white transition-opacity hover:opacity-90 ${
-                  action === "buy" ? "bg-success" : "bg-destructive"
+                disabled={isPlacing}
+                className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${
+                  side === "BUY" ? "bg-success" : "bg-destructive"
                 }`}
               >
-                {action === "buy" ? (
-                  <TrendingUp className="mr-2 inline size-4" />
+                {isPlacing ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : side === "BUY" ? (
+                  <TrendingUp className="size-4" />
                 ) : (
-                  <TrendingDown className="mr-2 inline size-4" />
+                  <TrendingDown className="size-4" />
                 )}
-                {action === "buy" ? "Buy" : "Sell"} {stock.symbol}
+                {isPlacing ? "Placing…" : `${side === "BUY" ? "Buy" : "Sell"} ${stock.ticker}`}
               </button>
             </form>
-
-            <div className="mt-4 text-xs text-muted-foreground">
-              Orders are simulated for demo purposes
-            </div>
           </div>
         </div>
       </div>
