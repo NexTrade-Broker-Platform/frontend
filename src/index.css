@@ -46,6 +46,14 @@
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #6366f1;
   --glow-cyan: #22d3ee;
+
+  --surface-positive: color-mix(in srgb, var(--success) 12%, transparent);
+  --surface-negative: color-mix(in srgb, var(--destructive) 12%, transparent);
+  --surface-info: color-mix(in srgb, var(--primary) 12%, transparent);
+  --surface-accent: color-mix(in srgb, var(--chart-2) 12%, transparent);
+
+  --wallet-balance-gradient-from: var(--primary);
+  --wallet-balance-gradient-to: var(--chart-2);
 }
 
 .dark {
@@ -90,6 +98,14 @@
   --sidebar-border: #1e293b;
   --sidebar-ring: #818cf8;
   --glow-cyan: #22d3ee;
+
+  --surface-positive: color-mix(in srgb, var(--success) 16%, transparent);
+  --surface-negative: color-mix(in srgb, var(--destructive) 16%, transparent);
+  --surface-info: color-mix(in srgb, var(--primary) 16%, transparent);
+  --surface-accent: color-mix(in srgb, var(--chart-2) 16%, transparent);
+
+  --wallet-balance-gradient-from: var(--primary);
+  --wallet-balance-gradient-to: var(--chart-2);
 }
 
 @theme inline {
@@ -136,6 +152,14 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-glow-cyan: var(--glow-cyan);
+
+  --color-surface-positive: var(--surface-positive);
+  --color-surface-negative: var(--surface-negative);
+  --color-surface-info: var(--surface-info);
+  --color-surface-accent: var(--surface-accent);
+
+  --color-wallet-balance-gradient-from: var(--wallet-balance-gradient-from);
+  --color-wallet-balance-gradient-to: var(--wallet-balance-gradient-to);
 }
 
 @layer base {
