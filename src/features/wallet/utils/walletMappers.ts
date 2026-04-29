@@ -16,24 +16,24 @@ import type {
 function mapWallet(dto: WalletDto): Wallet {
   return {
     id: dto.id,
-    userId: dto.user_id,
+    userId: dto.userId,
     currency: dto.currency,
-    availableBalance: dto.available_balance,
-    reservedBalance: dto.reserved_balance,
-    updatedAt: dto.updated_at,
-    createdAt: dto.created_at,
-    isActive: dto.is_active,
+    availableBalance: dto.availableBalance,
+    reservedBalance: dto.reservedBalance,
+    updatedAt: dto.updatedAt,
+    createdAt: dto.createdAt,
+    isActive: dto.active,
   };
 }
 
 function mapWalletTransaction(dto: WalletTransactionDto): WalletTransaction {
   return {
     id: dto.id,
-    walletId: dto.wallet_id,
-    referenceId: dto.reference_id,
-    type: dto.transaction_type,
+    walletId: dto.walletId,
+    referenceId: dto.referenceId,
+    type: dto.transactionType,
     amount: dto.amount,
-    createdAt: dto.created_at,
+    createdAt: dto.createdAt,
   };
 }
 

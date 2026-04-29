@@ -62,12 +62,22 @@ export const walletManager = {
     }
   },
 
-  async getTransactions(page = 0, limit = 10): Promise<WalletTransactionsPage> {
-    try {
-      const response = await walletRepository.getTransactions(page, limit);
-      return mapWalletTransactionsPageResponse(response.data);
-    } catch (error) {
-      throw new Error(extractErrorMessage(error));
-    }
+  // async getTransactions(page = 0, limit = 10): Promise<WalletTransactionsPage> {
+  //   try {
+  //     const response = await walletRepository.getTransactions(page, limit);
+  //     return mapWalletTransactionsPageResponse(response.data);
+  //   } catch (error) {
+  //     throw new Error(extractErrorMessage(error));
+  //   }
+  // },
+  async getTransactions(
+    _page = 0,
+    _limit = 10,
+  ): Promise<WalletTransactionsPage> {
+    return mapWalletTransactionsPageResponse({
+      transactions: [],
+      page: _page,
+      limit: _limit,
+    });
   },
 };

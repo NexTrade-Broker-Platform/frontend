@@ -3,6 +3,7 @@ import type {
   DepositRequestDto,
   DepositResponseDto,
   WithdrawRequestDto,
+  WithdrawResponseDto,
   WalletBalanceResponseDto,
   WalletTransactionsPageResponseDto,
 } from "@/features/wallet/types/wallet";
@@ -13,7 +14,7 @@ export const walletRepository = {
   },
 
   withdraw(data: WithdrawRequestDto) {
-    return api.post<DepositResponseDto>("/funds/withdraw", data);
+    return api.post<WithdrawRequestDto>("/funds/withdraw", data);
   },
 
   getBalance(currency = "USD") {

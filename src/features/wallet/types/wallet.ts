@@ -10,25 +10,31 @@ export type WithdrawRequestDto = {
 
 export type WalletDto = {
   id: string;
-  user_id: string;
+  userId: string;
   currency: string;
-  available_balance: number;
-  reserved_balance: number;
-  updated_at: string;
-  created_at: string;
-  is_active: boolean;
+  availableBalance: number;
+  reservedBalance: number;
+  updatedAt: string;
+  createdAt: string;
+  active: boolean;
 };
 
 export type WalletTransactionDto = {
   id: string;
-  wallet_id: string;
-  reference_id: string | null;
-  transaction_type: "DEPOSIT" | "WITHDRAWAL" | "ORDER_HOLD" | "ORDER_RELEASE";
+  walletId: string;
+  referenceId: string | null;
+  transactionType: "DEPOSIT" | "WITHDRAWAL" | "ORDER_HOLD" | "ORDER_RELEASE";
   amount: number;
-  created_at: string;
+  createdAt: string;
 };
 
 export type DepositResponseDto = {
+  message: string;
+  wallet: WalletDto;
+  transaction: WalletTransactionDto;
+};
+
+export type WithdrawResponseDto = {
   message: string;
   wallet: WalletDto;
   transaction: WalletTransactionDto;
