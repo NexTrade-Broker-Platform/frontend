@@ -13,13 +13,14 @@ export function WalletPage() {
     error: balanceError,
   } = useWalletBalance(currency);
 
-  const {
-    data: transactionsData,
-    isLoading: isTransactionsLoading,
-    error: transactionsError,
-  } = useWalletTransactions(0, 10);
+  // const {
+  //   data: transactionsData,
+  //   isLoading: isTransactionsLoading,
+  //   error: transactionsError,
+  // } = useWalletTransactions(0, 10);
 
-  const transactions = transactionsData?.transactions ?? [];
+  // const transactions = transactionsData?.transactions ?? [];
+  const transactions = [];
 
   return (
     <div className="p-4 lg:p-8">
@@ -49,13 +50,13 @@ export function WalletPage() {
           <WalletActionForm />
         </div>
 
-        <div className="lg:col-span-2">
+        {/* <div className="lg:col-span-2">
           <WalletTransactionHistory
             transactions={transactions}
             isLoading={isTransactionsLoading}
             errorMessage={transactionsError?.message}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );
