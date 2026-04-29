@@ -12,6 +12,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { authManager } from "@/features/auth/services/authManager";
 import { useTheme } from "@/shared/providers/ThemeProvider";
 
@@ -19,6 +20,7 @@ export function AppLayout() {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -32,7 +34,10 @@ export function AppLayout() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const handleLogout = () => {
-    authManager.logout().finally(() => navigate("/login", { replace: true }));
+    authManager.logout().finally(() => {
+      queryClient.clear();
+      navigate("/login", { replace: true });
+    });
   };
 
   return (

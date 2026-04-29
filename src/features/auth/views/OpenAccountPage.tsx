@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { TrendingUp, Eye, EyeOff, Loader2 } from "lucide-react";
+import { TrendingUp, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useRegister } from "@/features/auth/hooks/useRegister";
 import { validateRegisterForm } from "@/features/auth/utils/authValidators";
@@ -69,8 +69,15 @@ export function OpenAccountPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-chart-2/10 p-4 py-10">
+      <Link
+        to="/"
+        className="absolute left-6 top-6 flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Back
+      </Link>
       <div className="w-full max-w-lg">
-        <div className="mb-8 text-center">
+        <Link to="/" className="mb-8 block cursor-pointer text-center">
           <div className="mb-4 inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-chart-2">
             <TrendingUp className="size-8 text-white" />
           </div>
@@ -78,7 +85,7 @@ export function OpenAccountPage() {
             Lynx Broker
           </h1>
           <p className="text-sm text-muted-foreground">Your gateway to smart trading</p>
-        </div>
+        </Link>
 
         <div className="rounded-2xl border border-border bg-card p-8 shadow-lg">
           <h2 className="mb-1 text-xl font-semibold text-foreground">Create your account</h2>
