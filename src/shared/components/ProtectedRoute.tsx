@@ -18,7 +18,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     async function checkAuth() {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
           method: "GET",
           credentials: "include",
         });
