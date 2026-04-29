@@ -10,15 +10,6 @@ import { WalletPage } from "@/features/wallet/views/WalletPage";
 import { AppLayout } from "@/app/layouts/AppLayout";
 import { LandingPage } from "@/features/landing/views/LandingPage";
 import { ProtectedRoute } from "@/shared/components/ProtectedRoute";
-import { isAuthenticated } from "@/shared/lib/auth";
-
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  return isAuthenticated() ? (
-    <Navigate to="/dashboard" replace />
-  ) : (
-    <>{children}</>
-  );
-}
 
 export function AppRouter() {
   return (
