@@ -5,14 +5,14 @@ import type {
 } from "../types/landing";
 
 async function getLandingStats(): Promise<LandingStatsResponseDto> {
-  const response = await publicApi.get("/market/stocks", {
+  const response = await publicApi.get("api/market/stocks", {
     params: { limit: 3 },
   });
   return response.data;
 }
 
 async function getMarketPreview(): Promise<StockListResponseDto> {
-  const response = await publicApi.get("/market/stocks", {
+  const response = await publicApi.get("api/market/stocks", {
     params: { limit: 3 },
   });
   return response.data;
