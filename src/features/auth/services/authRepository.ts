@@ -1,4 +1,4 @@
-import { publicApi } from "@/shared/lib/api/httpClient";
+import { api, publicApi } from "@/shared/lib/api/httpClient";
 import type { AuthResponseDto, LoginRequestDto, RegisterRequestDto } from "@/features/auth/types/auth";
 
 export const authRepository = {
@@ -11,6 +11,6 @@ export const authRepository = {
   },
 
   logout() {
-    return publicApi.post<{ message: string }>("/users/logout");
+    return api.post<{ message: string }>("/users/logout");
   },
 };
