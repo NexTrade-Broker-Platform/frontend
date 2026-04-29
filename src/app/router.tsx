@@ -25,22 +25,8 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
 
-      <Route
-        path="/login"
-        element={
-          <AuthGuard>
-            <LoginPage />
-          </AuthGuard>
-        }
-      />
-      <Route
-        path="/signup"
-        element={
-          <AuthGuard>
-            <OpenAccountPage />
-          </AuthGuard>
-        }
-      />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<OpenAccountPage />} />
       <Route path="/auth" element={<Navigate to="/login" replace />} />
 
       <Route
