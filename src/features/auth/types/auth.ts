@@ -24,7 +24,6 @@ export interface AuthUserDto {
 }
 
 export interface AuthResponseDto {
-  token?: string;
   message?: string;
   user?: AuthUserDto;
 }
@@ -41,7 +40,6 @@ export interface AuthUser {
 }
 
 export interface AuthResult {
-  token: string;
   user: AuthUser | null;
 }
 
