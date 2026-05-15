@@ -21,7 +21,7 @@ export function mapOrder(dto: OrderDto): Order {
 
 export function mapOrdersPage(dto: OrdersResponseDto): OrdersPage {
   return {
-    orders: dto.orders.map(mapOrder),
+    orders: (dto.orders ?? []).map(mapOrder),
     pagination: dto.pagination,
   };
 }

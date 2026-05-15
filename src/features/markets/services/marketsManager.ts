@@ -1,7 +1,7 @@
 import axios from "axios";
-import { mapStock, mapStockDetail } from "@/features/markets/utils/marketsMappers";
+import { mapOption, mapStock, mapStockDetail } from "@/features/markets/utils/marketsMappers";
 import { marketsRepository } from "./marketsRepository";
-import type { MarketsQueryParams, Stock, StockDetail } from "@/features/markets/types/markets";
+import type { MarketsQueryParams, Option, Stock, StockDetail } from "@/features/markets/types/markets";
 
 function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -26,6 +26,15 @@ export const marketsManager = {
     try {
       const response = await marketsRepository.getStockDetail(ticker);
       return mapStockDetail(response.data);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async getOptionsList(): Promise<Option[]> {
+    try {
+      const response = await marketsRepository.getOptions();
+      return response.data.options.map(mapOption);
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }

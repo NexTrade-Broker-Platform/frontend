@@ -18,16 +18,16 @@ function mapCashBalance(dto: CashBalanceDto): CashBalance {
 function mapHolding(dto: HoldingDto): Holding {
   return {
     ticker: dto.ticker,
-    instrumentType: dto.instrument_type,
+    instrumentType: dto.instrumentType,
     quantity: dto.quantity,
-    averageCost: dto.average_cost,
-    totalCost: dto.quantity * dto.average_cost,
+    averageCost: dto.averageCost,
+    totalCost: dto.quantity * dto.averageCost,
   };
 }
 
 export function mapPortfolio(dto: PortfolioResponseDto): Portfolio {
   return {
-    cashBalances: dto.cash_balances.map(mapCashBalance),
-    holdings: dto.holdings.map(mapHolding),
+    cashBalances: (dto.cash_balances ?? []).map(mapCashBalance),
+    holdings: (dto.holdings ?? []).map(mapHolding),
   };
 }

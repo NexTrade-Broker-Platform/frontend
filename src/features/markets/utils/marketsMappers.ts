@@ -1,6 +1,8 @@
 import type {
   ChartDataPoint,
   ChartDataPointDto,
+  Option,
+  OptionDto,
   Stock,
   StockDetail,
   StockDetailResponseDto,
@@ -33,5 +35,17 @@ export function mapStockDetail(dto: StockDetailResponseDto): StockDetail {
   return {
     stock: mapStock(dto.stock),
     chartData: dto.chart_data.map(mapChartDataPoint),
+  };
+}
+
+export function mapOption(dto: OptionDto): Option {
+  return {
+    optionId: dto.option_id,
+    underlyingTicker: dto.underlying_ticker,
+    optionType: dto.option_type,
+    strikePrice: dto.strike_price,
+    expiryTime: dto.expiry_time,
+    premium: dto.premium,
+    isActive: dto.is_active,
   };
 }

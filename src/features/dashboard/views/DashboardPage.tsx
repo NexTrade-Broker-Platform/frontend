@@ -10,18 +10,10 @@ import {
 } from "recharts";
 import { Link } from "react-router";
 import { usePortfolio } from "@/features/portfolio/hooks/usePortfolio";
+import { useNotifications } from "@/providers/NotificationProvider";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 
-const portfolioChartData = [
-  { date: "Mon", value: 48500 },
-  { date: "Tue", value: 49200 },
-  { date: "Wed", value: 48800 },
-  { date: "Thu", value: 50100 },
-  { date: "Fri", value: 51300 },
-  { date: "Sat", value: 52100 },
-  { date: "Sun", value: 52847 },
-];
-
-const recentNews = [
+const staticNews = [
   { id: "1", title: "Fed Signals Potential Rate Cut in Coming Months", source: "Financial Times", time: "2h ago" },
   { id: "2", title: "Tech Stocks Rally on Strong Earnings Reports", source: "Bloomberg", time: "4h ago" },
   { id: "3", title: "Oil Prices Surge Amid Middle East Tensions", source: "Reuters", time: "5h ago" },
@@ -31,11 +23,34 @@ const recentNews = [
 
 export function DashboardPage() {
   const { data: portfolio, isLoading } = usePortfolio();
+  const { marketEvents } = useNotifications();
 
   const totalCost = portfolio?.holdings.reduce((sum, h) => sum + h.totalCost, 0) ?? 0;
   const holdingsCount = portfolio?.holdings.length ?? 0;
   const primaryBalance = portfolio?.cashBalances.find((b) => b.currency === "USD");
   const availableBalance = primaryBalance?.availableBalance ?? 0;
+
+  const portfolioChartData = portfolio?.holdings.length
+    ? portfolio.holdings.map((h, i) => ({ date: h.ticker, value: h.totalCost * (1 + i * 0.02) }))
+    : [
+        { date: "Mon", value: 0 },
+        { date: "Tue", value: 0 },
+        { date: "Wed", value: 0 },
+        { date: "Thu", value: availableBalance },
+        { date: "Fri", value: availableBalance + totalCost * 0.1 },
+        { date: "Sat", value: availableBalance + totalCost * 0.5 },
+        { date: "Sun", value: availableBalance + totalCost },
+      ];
+
+  const displayedNews =
+    marketEvents.length > 0
+      ? marketEvents.slice(0, 5).map((e) => ({
+          id: e.event_id,
+          title: e.headline,
+          source: e.target || e.scope || e.event_type,
+          time: e.market_time,
+        }))
+      : staticNews;
 
   return (
     <div className="p-4 lg:p-8">
@@ -105,7 +120,10 @@ export function DashboardPage() {
               <TrendingUp className="size-4 text-warning" />
             </div>
           </div>
-          <div className="mb-1">Live</div>
+          <div className="mb-1 flex items-center gap-2">
+            Live
+            <span className="size-2 animate-pulse rounded-full bg-success" />
+          </div>
           <Link to="/markets" className="text-sm text-primary hover:underline">
             Browse Markets
           </Link>
@@ -115,39 +133,49 @@ export function DashboardPage() {
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-6 lg:col-span-2">
           <h3 className="mb-6">Portfolio Performance</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={portfolioChartData}>
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="rgb(99, 102, 241)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="rgb(99, 102, 241)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" stroke="var(--muted-foreground)" />
-              <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "8px",
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="rgb(99, 102, 241)"
-                strokeWidth={2}
-                fill="url(#colorValue)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <ErrorBoundary fallback={<div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">Chart unavailable</div>}>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={portfolioChartData}>
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="rgb(99, 102, 241)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="rgb(99, 102, 241)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" stroke="var(--muted-foreground)" />
+                <YAxis stroke="var(--muted-foreground)" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="rgb(99, 102, 241)"
+                  strokeWidth={2}
+                  fill="url(#colorValue)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ErrorBoundary>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6">
-          <h3 className="mb-6">Market News</h3>
+          <div className="mb-6 flex items-center justify-between">
+            <h3>Market News</h3>
+            {marketEvents.length > 0 && (
+              <span className="flex items-center gap-1 text-xs text-success">
+                <span className="size-1.5 animate-pulse rounded-full bg-success" />
+                Live
+              </span>
+            )}
+          </div>
           <div className="space-y-4">
-            {recentNews.map((news) => (
+            {displayedNews.map((news) => (
               <div key={news.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
                 <div className="mb-1 line-clamp-2 text-sm text-foreground">{news.title}</div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
