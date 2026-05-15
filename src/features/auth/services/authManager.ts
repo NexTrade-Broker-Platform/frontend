@@ -2,7 +2,6 @@ import axios from "axios";
 import {
   clearAuthenticated,
   markAuthenticated,
-  storeToken,
 } from "@/shared/lib/auth";
 import { mapAuthResponse } from "@/features/auth/utils/authMappers";
 import { authRepository } from "./authRepository";
@@ -33,7 +32,6 @@ export const authManager = {
         password: data.password,
       });
       const result = mapAuthResponse(response.data);
-      if (result.token) storeToken(result.token);
       markAuthenticated();
       return result;
     } catch (error) {
@@ -52,7 +50,6 @@ export const authManager = {
         date_of_birth: data.dateOfBirth,
       });
       const result = mapAuthResponse(response.data);
-      if (result.token) storeToken(result.token);
       markAuthenticated();
       return result;
     } catch (error) {

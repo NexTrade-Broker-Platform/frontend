@@ -15,7 +15,6 @@ function mapAuthUser(dto: AuthUserDto): AuthUser {
 
 export function mapAuthResponse(dto: AuthResponseDto): AuthResult {
   return {
-    token: dto.token ?? "",
     user: dto.user ? mapAuthUser(dto.user) : null,
   };
 }
