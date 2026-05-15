@@ -24,6 +24,30 @@ export interface StockDetailResponseDto {
   chart_data: ChartDataPointDto[];
 }
 
+export interface OptionDto {
+  option_id: string;
+  underlying_ticker: string;
+  option_type: "CALL" | "PUT";
+  strike_price: number;
+  expiry_time: string;
+  premium: number;
+  is_active: boolean;
+}
+
+export interface OptionsListResponseDto {
+  options: OptionDto[];
+}
+
+export interface Option {
+  optionId: string;
+  underlyingTicker: string;
+  optionType: "CALL" | "PUT";
+  strikePrice: number;
+  expiryTime: string;
+  premium: number;
+  isActive: boolean;
+}
+
 export interface MarketsQueryParams {
   sector?: string;
   page?: number;

@@ -66,7 +66,7 @@ export function mapWalletTransactionsPageResponse(
   dto: WalletTransactionsPageResponseDto,
 ): WalletTransactionsPage {
   return {
-    transactions: dto.transactions.map(mapWalletTransaction),
-    pagination: mapPagination(dto.pagination),
+    transactions: (dto.transactions ?? []).map(mapWalletTransaction),
+    pagination: dto.pagination ? mapPagination(dto.pagination) : { totalRecords: 0, currentPage: 0, totalPages: 0, limit: 10 },
   };
 }

@@ -21,12 +21,15 @@ import {
 import { toast } from "sonner";
 import { useStockDetail } from "@/features/markets/hooks/useStockDetail";
 import { usePlaceOrder } from "@/features/orders/hooks/usePlaceOrder";
+import { useLivePrice } from "@/providers/NotificationProvider";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 import type { InstrumentType, OrderSide, OrderType } from "@/features/orders/types/orders";
 
 export function StockDetailPage() {
   const { ticker } = useParams<{ ticker: string }>();
   const { data: stockDetail, isLoading, isError, error } = useStockDetail(ticker!);
   const { mutate: placeOrder, isPending: isPlacing } = usePlaceOrder();
+  const livePrice = useLivePrice(ticker!);
 
   const [orderType, setOrderType] = useState<OrderType>("MARKET");
   const [side, setSide] = useState<OrderSide>("BUY");
@@ -34,6 +37,10 @@ export function StockDetailPage() {
   const [limitPrice, setLimitPrice] = useState("");
 
   const stock = stockDetail?.stock;
+
+  const price = livePrice?.price ?? stock?.currentPrice ?? 0;
+  const change = livePrice?.change ?? stock?.change ?? 0;
+  const changePct = livePrice?.change_pct ?? stock?.changePercent ?? 0;
 
   const handleSubmitOrder = (e: FormEvent) => {
     e.preventDefault();
@@ -96,7 +103,7 @@ export function StockDetailPage() {
 
   const estimatedTotal =
     (parseInt(quantity, 10) || 0) *
-    (orderType === "MARKET" ? stock.currentPrice : parseFloat(limitPrice) || 0);
+    (orderType === "MARKET" ? price : parseFloat(limitPrice) || 0);
 
   return (
     <div className="p-4 lg:p-8">
@@ -116,27 +123,33 @@ export function StockDetailPage() {
               <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
                 {stock.sector}
               </span>
+              {livePrice && (
+                <span className="flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 text-xs text-success">
+                  <span className="size-1.5 animate-pulse rounded-full bg-success" />
+                  Live
+                </span>
+              )}
             </div>
             <p className="text-muted-foreground">{stock.name}</p>
           </div>
 
           <div className="mb-6 flex items-end gap-4">
             <div>
-              <div className="mb-1 text-4xl">${stock.currentPrice.toFixed(2)}</div>
+              <div className="mb-1 text-4xl">${price.toFixed(2)}</div>
               <div
                 className={`flex items-center gap-1 ${
-                  stock.change >= 0 ? "text-success" : "text-destructive"
+                  change >= 0 ? "text-success" : "text-destructive"
                 }`}
               >
-                {stock.change >= 0 ? (
+                {change >= 0 ? (
                   <ArrowUpRight className="size-5" />
                 ) : (
                   <ArrowDownRight className="size-5" />
                 )}
                 <span>
-                  {stock.change >= 0 ? "+" : ""}
-                  {stock.change.toFixed(2)} ({stock.changePercent >= 0 ? "+" : ""}
-                  {stock.changePercent.toFixed(2)}%)
+                  {change >= 0 ? "+" : ""}
+                  {change.toFixed(2)} ({changePct >= 0 ? "+" : ""}
+                  {changePct.toFixed(2)}%)
                 </span>
               </div>
             </div>
@@ -145,7 +158,9 @@ export function StockDetailPage() {
           <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="mb-1 text-sm text-muted-foreground">Volume</div>
-              <div className="text-foreground">{stock.volume.toLocaleString()}</div>
+              <div className="text-foreground">
+                {(livePrice?.volume ?? stock.volume).toLocaleString()}
+              </div>
             </div>
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="mb-1 text-sm text-muted-foreground">Open</div>
@@ -164,30 +179,32 @@ export function StockDetailPage() {
           {stockDetail.chartData.length > 0 && (
             <div className="rounded-xl border border-border bg-card p-6">
               <h3 className="mb-6">Price Chart</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={stockDetail.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="time" stroke="var(--muted-foreground)" />
-                  <YAxis
-                    domain={["dataMin - 1", "dataMax + 1"]}
-                    stroke="var(--muted-foreground)"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="price"
-                    stroke={stock.change >= 0 ? "#10b981" : "#ef4444"}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <ErrorBoundary fallback={<div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">Chart unavailable</div>}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={stockDetail.chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="time" stroke="var(--muted-foreground)" />
+                    <YAxis
+                      domain={["dataMin - 1", "dataMax + 1"]}
+                      stroke="var(--muted-foreground)"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="price"
+                      stroke={change >= 0 ? "#10b981" : "#ef4444"}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ErrorBoundary>
             </div>
           )}
         </div>
@@ -294,7 +311,7 @@ export function StockDetailPage() {
                     <span className="text-foreground">
                       $
                       {orderType === "MARKET"
-                        ? stock.currentPrice.toFixed(2)
+                        ? price.toFixed(2)
                         : (parseFloat(limitPrice) || 0).toFixed(2)}
                     </span>
                   </div>

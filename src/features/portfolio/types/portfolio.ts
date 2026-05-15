@@ -6,9 +6,9 @@ export interface CashBalanceDto {
 
 export interface HoldingDto {
   ticker: string;
-  instrument_type: string;
+  instrumentType: string;
   quantity: number;
-  average_cost: number;
+  averageCost: number;
 }
 
 export interface PortfolioResponseDto {
