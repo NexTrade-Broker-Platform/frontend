@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { AlertCircle, Loader2, Search, X } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { usePortfolio } from "@/features/portfolio/hooks/usePortfolio";
+import { usePortfolioTimeseries } from "@/features/portfolio/hooks/usePortfolioTimeseries";
 import { useOrders } from "@/features/orders/hooks/useOrders";
 import { useCancelOrder } from "@/features/orders/hooks/useCancelOrder";
 import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
@@ -33,6 +46,11 @@ const CANCELLABLE: OrderStatus[] = ["PENDING", "PARTIALLY_FILLED"];
 
 export function PortfolioPage() {
   const { data: portfolio, isLoading, isError, error } = usePortfolio();
+  const {
+    data: portfolioTimeseries,
+    isLoading: timeseriesLoading,
+    isError: timeseriesError,
+  } = usePortfolioTimeseries(30);
   const { data: ordersData, isLoading: ordersLoading } = useOrders({ limit: 50 });
   const { mutate: cancelOrder, isPending: isCancelling } = useCancelOrder();
 
@@ -43,6 +61,10 @@ export function PortfolioPage() {
   const primaryBalance = portfolio?.cashBalances.find((b) => b.currency === "USD");
   const availableBalance = primaryBalance?.availableBalance ?? 0;
   const pieData = portfolio?.holdings.map((h) => ({ name: h.ticker, value: h.totalCost })) ?? [];
+  const timeseriesPoints = portfolioTimeseries?.points ?? [];
+  const latestPoint = timeseriesPoints.length > 0
+    ? timeseriesPoints[timeseriesPoints.length - 1]
+    : undefined;
 
   const allowedStatuses = TAB_STATUSES[orderTab];
   const allOrders = ordersData?.orders ?? [];
@@ -79,7 +101,19 @@ export function PortfolioPage() {
       )}
 
       {/* Summary cards */}
-      <div className="mb-8 grid gap-6 lg:grid-cols-3">
+      <div className="mb-8 grid gap-6 lg:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-6">
+          <div className="mb-4 text-sm text-muted-foreground">Portfolio Value</div>
+          {timeseriesLoading ? (
+            <div className="h-7 w-32 animate-pulse rounded bg-muted" />
+          ) : (
+            <div className="mb-2">
+              ${(latestPoint?.totalValue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </div>
+          )}
+          <div className="text-sm text-muted-foreground">Cash + stocks at market value</div>
+        </div>
+
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="mb-4 text-sm text-muted-foreground">Total Invested</div>
           {isLoading ? (
@@ -113,6 +147,69 @@ export function PortfolioPage() {
           )}
           <div className="text-sm text-muted-foreground">Open holdings</div>
         </div>
+      </div>
+
+      <div className="mb-8 rounded-xl border border-border bg-card p-6">
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="mb-1">Portfolio Value</h3>
+            <p className="text-sm text-muted-foreground">Last 30 days, stocks + wallet only</p>
+          </div>
+          {!timeseriesLoading && latestPoint && (
+            <div className="text-sm text-muted-foreground">
+              Current total:{" "}
+              <span className="text-foreground">
+                ${latestPoint.totalValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {timeseriesLoading && (
+          <div className="h-[320px] animate-pulse rounded-lg bg-muted" />
+        )}
+
+        {!timeseriesLoading && timeseriesError && (
+          <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+            <AlertCircle className="size-5 shrink-0" />
+            <span>Failed to load portfolio history.</span>
+          </div>
+        )}
+
+        {!timeseriesLoading && !timeseriesError && timeseriesPoints.length > 0 && (
+          <ErrorBoundary fallback={<div className="flex h-[320px] items-center justify-center text-sm text-muted-foreground">Chart unavailable</div>}>
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={timeseriesPoints}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis
+                  dataKey="date"
+                  stroke="var(--muted-foreground)"
+                  tickFormatter={(value: string) => value.slice(5)}
+                />
+                <YAxis stroke="var(--muted-foreground)" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                  }}
+                  formatter={(value, name) => [
+                    `$${Number(value ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    name === "totalValue"
+                      ? "Total value"
+                      : name === "cashValue"
+                        ? "Cash value"
+                        : "Stocks value",
+                  ]}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="totalValue" name="Total value" stroke="#2563eb" strokeWidth={3} dot={false} />
+                <Line type="monotone" dataKey="cashValue" name="Cash value" stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="stocksValue" name="Stocks value" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </ErrorBoundary>
+        )}
       </div>
 
       {/* Holdings + allocation */}

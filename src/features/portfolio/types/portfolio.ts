@@ -16,6 +16,17 @@ export interface PortfolioResponseDto {
   holdings: HoldingDto[];
 }
 
+export interface PortfolioTimeseriesPointDto {
+  date: string;
+  cash_value: number;
+  stocks_value: number;
+  total_value: number;
+}
+
+export interface PortfolioTimeseriesResponseDto {
+  points: PortfolioTimeseriesPointDto[];
+}
+
 export interface CashBalance {
   currency: string;
   availableBalance: number;
@@ -33,4 +44,15 @@ export interface Holding {
 export interface Portfolio {
   cashBalances: CashBalance[];
   holdings: Holding[];
+}
+
+export interface PortfolioTimeseriesPoint {
+  date: string;
+  cashValue: number;
+  stocksValue: number;
+  totalValue: number;
+}
+
+export interface PortfolioTimeseries {
+  points: PortfolioTimeseriesPoint[];
 }

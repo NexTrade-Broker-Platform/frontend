@@ -5,6 +5,10 @@ import type {
   HoldingDto,
   Portfolio,
   PortfolioResponseDto,
+  PortfolioTimeseries,
+  PortfolioTimeseriesPoint,
+  PortfolioTimeseriesPointDto,
+  PortfolioTimeseriesResponseDto,
 } from "@/features/portfolio/types/portfolio";
 
 function mapCashBalance(dto: CashBalanceDto): CashBalance {
@@ -29,5 +33,20 @@ export function mapPortfolio(dto: PortfolioResponseDto): Portfolio {
   return {
     cashBalances: (dto.cash_balances ?? []).map(mapCashBalance),
     holdings: (dto.holdings ?? []).map(mapHolding),
+  };
+}
+
+function mapPortfolioTimeseriesPoint(dto: PortfolioTimeseriesPointDto): PortfolioTimeseriesPoint {
+  return {
+    date: dto.date,
+    cashValue: dto.cash_value,
+    stocksValue: dto.stocks_value,
+    totalValue: dto.total_value,
+  };
+}
+
+export function mapPortfolioTimeseries(dto: PortfolioTimeseriesResponseDto): PortfolioTimeseries {
+  return {
+    points: (dto.points ?? []).map(mapPortfolioTimeseriesPoint),
   };
 }
