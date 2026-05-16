@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import {
   Briefcase,
@@ -49,8 +49,14 @@ export function AppLayout() {
     });
   };
 
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-dvh overflow-hidden bg-background">
       {!isMobileMenuOpen && (
         <button
           onClick={() => setIsMobileMenuOpen(true)}
@@ -140,7 +146,7 @@ export function AppLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto pt-16 lg:pt-0">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
         <ErrorBoundary key={location.pathname}>
           <Outlet />
         </ErrorBoundary>

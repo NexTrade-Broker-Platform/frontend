@@ -84,7 +84,7 @@ export function StockPriceChart({ ticker, change }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [view,       setView]       = useState({ start: 0, end: 1 });
-  const [size,       setSize]       = useState({ w: 800, h: 380 });
+  const [size,       setSize]       = useState({ w: 0, h: 380 });
 
   const containerRef  = useRef<HTMLDivElement>(null);
   const dragRef       = useRef<{ clientX: number; start: number; end: number } | null>(null);
@@ -339,7 +339,7 @@ export function StockPriceChart({ ticker, change }: Props) {
         )}
         <div
           ref={containerRef}
-          className="h-95 w-full select-none"
+          className="h-95 w-full select-none overflow-hidden"
           style={{ cursor: isDragging ? "grabbing" : "crosshair" }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
