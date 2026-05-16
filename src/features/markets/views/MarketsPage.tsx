@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { useMarkets } from "@/features/markets/hooks/useMarkets";
 import { useOptions } from "@/features/markets/hooks/useOptions";
+import { useMarketStatus } from "@/features/markets/hooks/useMarketStatus";
 import { useNotifications } from "@/providers/NotificationProvider";
 import { FadeIn } from "@/shared/components/FadeIn";
 import { MarketsHeader } from "./components/MarketsHeader";
@@ -16,8 +17,11 @@ export function MarketsPage() {
   const [tab, setTab] = useState<Tab>("STOCKS");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: stocks, isLoading: stocksLoading, isError: stocksError, error: stocksErr } = useMarkets({ limit: 50 });
-  const { data: options, isLoading: optionsLoading, isError: optionsError, error: optionsErr } = useOptions();
+  const { data: marketStatus, dataUpdatedAt } = useMarketStatus();
+  const statusLoaded = !!marketStatus;
+
+  const { data: stocks, isLoading: stocksLoading, isError: stocksError, error: stocksErr } = useMarkets({ limit: 50 }, { enabled: statusLoaded });
+  const { data: options, isLoading: optionsLoading, isError: optionsError, error: optionsErr } = useOptions({ enabled: statusLoaded });
   const { priceUpdates } = useNotifications();
 
   const filteredStocks = (stocks ?? []).filter(
@@ -45,7 +49,7 @@ export function MarketsPage() {
   return (
     <div className="p-4 lg:p-8">
       <FadeIn>
-        <MarketsHeader />
+        <MarketsHeader status={marketStatus} fetchedAt={dataUpdatedAt} />
       </FadeIn>
 
       <FadeIn delay={100}>

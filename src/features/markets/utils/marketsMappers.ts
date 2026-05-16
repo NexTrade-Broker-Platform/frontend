@@ -1,6 +1,9 @@
 import type {
+  Candle,
+  CandleDto,
   ChartDataPoint,
-  ChartDataPointDto,
+  MarketStatus,
+  MarketStatusResponseDto,
   Option,
   OptionDto,
   Stock,
@@ -27,14 +30,25 @@ export function mapStock(dto: StockDto): Stock {
   };
 }
 
-function mapChartDataPoint(dto: ChartDataPointDto): ChartDataPoint {
-  return { time: dto.time, price: dto.price };
+export function mapCandleToChartDataPoint(dto: CandleDto): ChartDataPoint {
+  return { time: dto.timestamp, price: dto.close };
+}
+
+export function mapCandle(dto: CandleDto): Candle {
+  return {
+    time: Math.floor(new Date(dto.timestamp).getTime() / 1000),
+    open: dto.open,
+    high: dto.high,
+    low: dto.low,
+    close: dto.close,
+    volume: dto.volume,
+  };
 }
 
 export function mapStockDetail(dto: StockDetailResponseDto): StockDetail {
   return {
     stock: mapStock(dto.stock),
-    chartData: dto.chart_data.map(mapChartDataPoint),
+    chartData: dto.chart_data.map(mapCandleToChartDataPoint),
   };
 }
 
@@ -47,5 +61,21 @@ export function mapOption(dto: OptionDto): Option {
     expiryTime: dto.expiry_time,
     premium: dto.premium,
     isActive: dto.is_active,
+  };
+}
+
+export function mapMarketStatus(dto: MarketStatusResponseDto): MarketStatus {
+  return {
+    connectionStatus: dto.connection_status,
+    exchangeConnected: dto.exchange_connected,
+    marketStatus: dto.market_status,
+    isOpen: dto.is_open,
+    platformId: dto.platform_id,
+    marketTime: dto.market_time,
+    marketDate: dto.market_date,
+    realTime: dto.real_time,
+    speedMultiplier: dto.speed_multiplier,
+    lastSyncMarketTime: dto.last_sync_market_time,
+    lastSyncAt: dto.last_sync_at,
   };
 }

@@ -10,9 +10,13 @@ export interface StockDto {
   listed_at: string;
 }
 
-export interface ChartDataPointDto {
-  time: string;
-  price: number;
+export interface CandleDto {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
 }
 
 export interface StockListResponseDto {
@@ -21,7 +25,7 @@ export interface StockListResponseDto {
 
 export interface StockDetailResponseDto {
   stock: StockDto;
-  chart_data: ChartDataPointDto[];
+  chart_data: CandleDto[];
 }
 
 export interface OptionDto {
@@ -32,6 +36,27 @@ export interface OptionDto {
   expiry_time: string;
   premium: number;
   is_active: boolean;
+}
+
+export interface StockHistoryResponseDto {
+  ticker: string;
+  from: string;
+  to: string;
+  chart_data: CandleDto[];
+}
+
+export interface MarketStatusResponseDto {
+  connection_status: "CONNECTED" | "DISCONNECTED";
+  exchange_connected: boolean;
+  market_status: "OPEN" | "CLOSED";
+  is_open: boolean;
+  platform_id: string | null;
+  market_time: string | null;
+  market_date: string | null;
+  real_time: string | null;
+  speed_multiplier: number | null;
+  last_sync_market_time: string | null;
+  last_sync_at: string | null;
 }
 
 export interface OptionsListResponseDto {
@@ -73,7 +98,30 @@ export interface ChartDataPoint {
   price: number;
 }
 
+export interface Candle {
+  time: number; // Unix seconds — works for both daily and intraday
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export interface StockDetail {
   stock: Stock;
   chartData: ChartDataPoint[];
+}
+
+export interface MarketStatus {
+  connectionStatus: "CONNECTED" | "DISCONNECTED";
+  exchangeConnected: boolean;
+  marketStatus: "OPEN" | "CLOSED";
+  isOpen: boolean;
+  platformId: string | null;
+  marketTime: string | null;
+  marketDate: string | null;
+  realTime: string | null;
+  speedMultiplier: number | null;
+  lastSyncMarketTime: string | null;
+  lastSyncAt: string | null;
 }

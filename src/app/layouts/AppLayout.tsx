@@ -31,7 +31,7 @@ export function AppLayout() {
     [
       { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { path: "/news", label: "News", icon: Newspaper },
-      { path: "/markets", label: "Markets", icon: TrendingUp },
+      { path: "/markets", label: "Market", icon: TrendingUp },
     ],
     [
       { path: "/portfolio", label: "Portfolio", icon: Briefcase },

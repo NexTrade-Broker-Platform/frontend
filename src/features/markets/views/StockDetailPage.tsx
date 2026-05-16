@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import React from "react";
 import { Link, useParams } from "react-router";
 import {
   AlertCircle,
@@ -9,20 +10,13 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { toast } from "sonner";
 import { useStockDetail } from "@/features/markets/hooks/useStockDetail";
+import { useMarketStatus } from "@/features/markets/hooks/useMarketStatus";
 import { usePlaceOrder } from "@/features/orders/hooks/usePlaceOrder";
 import { useLivePrice } from "@/providers/NotificationProvider";
-import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
+import { StockPriceChart } from "@/features/markets/views/components/StockPriceChart";
+import { MarketClock } from "@/features/markets/views/components/MarketClock";
 import type { InstrumentType, OrderSide, OrderType } from "@/features/orders/types/orders";
 
 export function StockDetailPage() {
@@ -30,6 +24,7 @@ export function StockDetailPage() {
   const { data: stockDetail, isLoading, isError, error } = useStockDetail(ticker!);
   const { mutate: placeOrder, isPending: isPlacing } = usePlaceOrder();
   const livePrice = useLivePrice(ticker!);
+  const { data: marketStatus, dataUpdatedAt } = useMarketStatus();
 
   const [orderType, setOrderType] = useState<OrderType>("MARKET");
   const [side, setSide] = useState<OrderSide>("BUY");
@@ -42,7 +37,7 @@ export function StockDetailPage() {
   const change = livePrice?.change ?? stock?.change ?? 0;
   const changePct = livePrice?.change_pct ?? stock?.changePercent ?? 0;
 
-  const handleSubmitOrder = (e: FormEvent) => {
+  const handleSubmitOrder = (e: React.BaseSyntheticEvent) => {
     e.preventDefault();
     if (!stock) return;
     const qty = parseInt(quantity, 10);
@@ -152,6 +147,24 @@ export function StockDetailPage() {
                   {changePct.toFixed(2)}%)
                 </span>
               </div>
+              {marketStatus?.marketTime && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span
+                    className={`size-1.5 rounded-full ${
+                      marketStatus.exchangeConnected ? "animate-pulse bg-success" : "bg-muted-foreground/50"
+                    }`}
+                  />
+                  <span>{marketStatus.exchangeConnected ? "Market Open" : "Market Closed"}</span>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="font-mono">
+                    <MarketClock
+                      marketTime={marketStatus.marketTime}
+                      speedMultiplier={marketStatus.speedMultiplier ?? 1}
+                      fetchedAt={dataUpdatedAt}
+                    />
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -176,37 +189,7 @@ export function StockDetailPage() {
             </div>
           </div>
 
-          {stockDetail.chartData.length > 0 && (
-            <div className="rounded-xl border border-border bg-card p-6">
-              <h3 className="mb-6">Price Chart</h3>
-              <ErrorBoundary fallback={<div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">Chart unavailable</div>}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={stockDetail.chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="time" stroke="var(--muted-foreground)" />
-                    <YAxis
-                      domain={["dataMin - 1", "dataMax + 1"]}
-                      stroke="var(--muted-foreground)"
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="price"
-                      stroke={change >= 0 ? "#10b981" : "#ef4444"}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ErrorBoundary>
-            </div>
-          )}
+          <StockPriceChart ticker={stock.ticker} change={change} />
         </div>
 
         <div>

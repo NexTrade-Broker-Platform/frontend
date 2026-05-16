@@ -1,7 +1,7 @@
 import axios from "axios";
-import { mapOption, mapStock, mapStockDetail } from "@/features/markets/utils/marketsMappers";
+import { mapCandle, mapCandleToChartDataPoint, mapMarketStatus, mapOption, mapStock, mapStockDetail } from "@/features/markets/utils/marketsMappers";
 import { marketsRepository } from "./marketsRepository";
-import type { MarketsQueryParams, Option, Stock, StockDetail } from "@/features/markets/types/markets";
+import type { Candle, MarketStatus, MarketsQueryParams, Option, Stock, StockDetail } from "@/features/markets/types/markets";
 
 function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -35,6 +35,33 @@ export const marketsManager = {
     try {
       const response = await marketsRepository.getOptions();
       return response.data.options.map(mapOption);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  async getStockHistory(ticker: string, from: string, to: string): Promise<{ time: string; price: number }[]> {
+    try {
+      const response = await marketsRepository.getStockHistory(ticker, from, to);
+      return response.data.chart_data.map(mapCandleToChartDataPoint);
+    } catch {
+      return [];
+    }
+  },
+
+  async getStockCandles(ticker: string, from: string, to: string): Promise<Candle[]> {
+    try {
+      const response = await marketsRepository.getStockHistory(ticker, from, to);
+      return response.data.chart_data.map(mapCandle);
+    } catch {
+      return [];
+    }
+  },
+
+  async getMarketStatus(): Promise<MarketStatus> {
+    try {
+      const response = await marketsRepository.getMarketStatus();
+      return mapMarketStatus(response.data);
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
