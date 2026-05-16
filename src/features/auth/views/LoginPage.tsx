@@ -1,10 +1,12 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { TrendingUp, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useLogin } from "@/features/auth/hooks/useLogin";
 import { validateLoginForm } from "@/features/auth/utils/authValidators";
 import type { FormErrors, LoginFormData } from "@/features/auth/types/auth";
+import { APP_NAME } from "@/app/config";
+import logo from "@/assets/logo.svg";
 
 const INITIAL_FORM: LoginFormData = { email: "", password: "" };
 
@@ -22,7 +24,7 @@ export function LoginPage() {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   }
 
-  function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: React.BaseSyntheticEvent) {
     e.preventDefault();
     const validationErrors = validateLoginForm(form);
     if (Object.keys(validationErrors).length > 0) {
@@ -45,17 +47,21 @@ export function LoginPage() {
         Back
       </Link>
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 block cursor-pointer text-center">
-          <div className="mb-4 inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-chart-2">
-            <TrendingUp className="size-8 text-white" />
-          </div>
+        <Link
+          to="/"
+          className="mb-8 block cursor-pointer text-center animate-hero-in"
+        >
+          <img src={logo} alt={APP_NAME} className="mx-auto mb-4 size-16" />
           <h1 className="mb-1 bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-2xl font-bold text-transparent">
-            Lynx Broker
+            {APP_NAME}
           </h1>
           <p className="text-sm text-muted-foreground">Your gateway to smart trading</p>
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-lg">
+        <div
+          className="rounded-2xl border border-border bg-card p-6 shadow-lg animate-hero-in sm:p-8"
+          style={{ animationDelay: "150ms" }}
+        >
           <h2 className="mb-1 text-xl font-semibold text-foreground">Welcome back</h2>
           <p className="mb-6 text-sm text-muted-foreground">Sign in to your account to continue</p>
 
@@ -79,7 +85,7 @@ export function LoginPage() {
                 }`}
               />
               {errors.email && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.email}</p>
+                <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.email}</p>
               )}
             </div>
 
@@ -112,7 +118,7 @@ export function LoginPage() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.password}</p>
+                <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.password}</p>
               )}
             </div>
 

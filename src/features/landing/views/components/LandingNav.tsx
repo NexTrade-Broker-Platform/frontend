@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
-import { TrendingUp } from "lucide-react";
 import { APP_NAME } from "@/app/config";
 import { OpenAccountButton } from "./OpenAccountButton";
+import logo from "@/assets/logo.svg";
 
 export function LandingNav() {
   const navigate = useNavigate();
@@ -9,10 +9,8 @@ export function LandingNav() {
   return (
     <header className="mb-14 flex items-center justify-between rounded-2xl border border-border bg-card/80 px-4 py-3 backdrop-blur md:px-6 animate-hero-in">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20">
-          <TrendingUp className="h-5 w-5 text-primary" />
-        </div>
-        <span className="text-sm font-semibold tracking-wide">{APP_NAME}</span>
+        <img src={logo} alt={APP_NAME} className="h-8 w-8" />
+        <span className="hidden text-sm font-semibold tracking-wide sm:block">{APP_NAME}</span>
       </div>
       <div className="flex gap-2">
         <button
@@ -21,7 +19,9 @@ export function LandingNav() {
         >
           Log in
         </button>
-        <OpenAccountButton size="sm" />
+        <div className="hidden sm:block">
+          <OpenAccountButton size="sm" />
+        </div>
       </div>
     </header>
   );

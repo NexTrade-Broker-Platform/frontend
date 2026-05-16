@@ -5,11 +5,11 @@ function mapAuthUser(dto: AuthUserDto): AuthUser {
     id: dto.id,
     email: dto.email,
     username: dto.username,
-    firstName: dto.first_name,
-    lastName: dto.last_name,
-    dateOfBirth: dto.date_of_birth,
-    createdAt: dto.created_at,
-    isActive: dto.is_active,
+    firstName: dto.firstName ?? dto.first_name ?? "",
+    lastName: dto.lastName ?? dto.last_name ?? "",
+    dateOfBirth: dto.dateOfBirth ?? dto.date_of_birth ?? "",
+    createdAt: dto.createdAt ?? dto.created_at ?? "",
+    isActive: dto.active ?? dto.is_active ?? false,
   };
 }
 
