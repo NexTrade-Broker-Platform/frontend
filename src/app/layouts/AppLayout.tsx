@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import {
   Briefcase,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -26,12 +27,17 @@ export function AppLayout() {
   const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/markets", label: "Markets", icon: TrendingUp },
-    { path: "/portfolio", label: "Portfolio", icon: Briefcase },
-    { path: "/wallet", label: "Wallet", icon: Wallet },
-    { path: "/news", label: "News", icon: Newspaper },
+  const navGroups = [
+    [
+      { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { path: "/news", label: "News", icon: Newspaper },
+      { path: "/markets", label: "Market", icon: TrendingUp },
+    ],
+    [
+      { path: "/portfolio", label: "Portfolio", icon: Briefcase },
+      { path: "/wallet", label: "Wallet", icon: Wallet },
+      { path: "/orders", label: "Orders", icon: ClipboardList },
+    ],
   ];
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -82,34 +88,42 @@ export function AppLayout() {
             </button>
           </div>
 
-          <nav className="flex-1 space-y-1 p-4">
-            {navItems.map((item, i) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={closeMobileMenu}
-                  className={`flex animate-hero-in items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
-                  style={{ animationDelay: `${(i + 1) * 75}ms` }}
-                >
-                  <Icon className="size-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+          <nav className="flex-1 p-4">
+            {navGroups.map((group, gi) => (
+              <div key={gi}>
+                {gi > 0 && <hr className="my-3 border-border" />}
+                <div className="space-y-1">
+                  {group.map((item, i) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    const delay = (navGroups.slice(0, gi).flat().length + i + 1) * 75;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={closeMobileMenu}
+                        className={`flex animate-hero-in items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+                          isActive
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        }`}
+                        style={{ animationDelay: `${delay}ms` }}
+                      >
+                        <Icon className="size-5" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           <div className="space-y-2 border-t border-border p-4">
             <button
               onClick={toggleTheme}
               className="flex w-full animate-hero-in items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              style={{ animationDelay: `${(navItems.length + 1) * 75}ms` }}
+              style={{ animationDelay: `${(navGroups.flat().length + 1) * 75}ms` }}
             >
               {theme === "light" ? <Moon className="size-5" /> : <Sun className="size-5" />}
               <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
@@ -117,7 +131,7 @@ export function AppLayout() {
             <button
               onClick={handleLogout}
               className="flex w-full animate-hero-in items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              style={{ animationDelay: `${(navItems.length + 2) * 75}ms` }}
+              style={{ animationDelay: `${(navGroups.flat().length + 2) * 75}ms` }}
             >
               <LogOut className="size-5" />
               <span>Logout</span>

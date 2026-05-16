@@ -1,8 +1,10 @@
 import { api } from "@/shared/lib/api/httpClient";
 import type {
+  MarketStatusResponseDto,
   MarketsQueryParams,
   OptionsListResponseDto,
   StockDetailResponseDto,
+  StockHistoryResponseDto,
   StockListResponseDto,
 } from "@/features/markets/types/markets";
 import type { MarketEvent } from "@/providers/NotificationProvider";
@@ -18,6 +20,14 @@ export const marketsRepository = {
 
   getOptions() {
     return api.get<OptionsListResponseDto>("/market/options");
+  },
+
+  getStockHistory(ticker: string, from: string, to: string) {
+    return api.get<StockHistoryResponseDto>(`/market/stocks/${ticker}/history`, { params: { from, to } });
+  },
+
+  getMarketStatus() {
+    return api.get<MarketStatusResponseDto>("/market/status");
   },
 
   getMarketEvents() {

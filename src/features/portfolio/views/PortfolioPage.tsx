@@ -1,10 +1,18 @@
 import { useState } from "react";
 import { AlertCircle, Loader2, Search, X } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { usePortfolio } from "@/features/portfolio/hooks/usePortfolio";
 import { useOrders } from "@/features/orders/hooks/useOrders";
+import { PortfolioValueChart } from "@/shared/components/PortfolioValueChart";
+import { FadeIn } from "@/shared/components/FadeIn";
 import { useCancelOrder } from "@/features/orders/hooks/useCancelOrder";
 import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 import type { OrderStatus } from "@/features/orders/types/orders";
@@ -43,7 +51,6 @@ export function PortfolioPage() {
   const primaryBalance = portfolio?.cashBalances.find((b) => b.currency === "USD");
   const availableBalance = primaryBalance?.availableBalance ?? 0;
   const pieData = portfolio?.holdings.map((h) => ({ name: h.ticker, value: h.totalCost })) ?? [];
-
   const allowedStatuses = TAB_STATUSES[orderTab];
   const allOrders = ordersData?.orders ?? [];
   const filteredOrders = allOrders
@@ -79,7 +86,19 @@ export function PortfolioPage() {
       )}
 
       {/* Summary cards */}
-      <div className="mb-8 grid gap-6 lg:grid-cols-3">
+      <div className="mb-8 grid gap-6 lg:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-6">
+          <div className="mb-4 text-sm text-muted-foreground">Portfolio Value</div>
+          {isLoading ? (
+            <div className="h-7 w-32 animate-pulse rounded bg-muted" />
+          ) : (
+            <div className="mb-2">
+              ${((portfolio?.holdings.reduce((s, h) => s + h.totalCost, 0) ?? 0) + (portfolio?.cashBalances.find((b) => b.currency === "USD")?.availableBalance ?? 0)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </div>
+          )}
+          <div className="text-sm text-muted-foreground">Cash + stocks at cost</div>
+        </div>
+
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="mb-4 text-sm text-muted-foreground">Total Invested</div>
           {isLoading ? (
@@ -114,6 +133,12 @@ export function PortfolioPage() {
           <div className="text-sm text-muted-foreground">Open holdings</div>
         </div>
       </div>
+
+      <FadeIn delay={200}>
+        <div className="mb-8">
+          <PortfolioValueChart />
+        </div>
+      </FadeIn>
 
       {/* Holdings + allocation */}
       <div className="mb-6 grid gap-6 lg:grid-cols-3">
