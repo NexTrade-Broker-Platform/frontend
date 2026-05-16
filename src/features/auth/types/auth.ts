@@ -16,11 +16,18 @@ export interface AuthUserDto {
   id: string;
   email: string;
   username: string;
-  first_name: string;
-  last_name: string;
-  date_of_birth: string;
-  created_at: string;
-  is_active: boolean;
+  firstName?: string;
+  first_name?: string;
+  lastName?: string;
+  last_name?: string;
+  dateOfBirth?: string;
+  date_of_birth?: string;
+  createdAt?: string;
+  created_at?: string;
+  active?: boolean;
+  is_active?: boolean;
+  isAdmin?: boolean;
+  is_admin?: boolean;
 }
 
 export interface AuthResponseDto {
