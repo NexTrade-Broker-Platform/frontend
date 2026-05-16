@@ -14,7 +14,7 @@ export function HeroContent() {
         Real-time market intelligence
       </p>
       <h1
-        className="animate-hero-in text-4xl font-semibold leading-tight whitespace-nowrap md:text-5xl"
+        className="animate-hero-in text-4xl font-semibold leading-tight md:whitespace-nowrap md:text-5xl"
         style={{ animationDelay: "200ms" }}
       >
         <TypingHeadline />
