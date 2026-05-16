@@ -1,8 +1,8 @@
 type MessageHandler = (payload: unknown) => void;
 
-const WS_BASE =
+const WS_ENDPOINT =
   (import.meta.env.VITE_NOTIFICATION_WS_URL as string | undefined) ??
-  "ws://localhost:9006";
+  "/ws/notifications";
 
 const RETRY_BASE_MS = 1_000;
 const RETRY_MAX_MS = 30_000;
@@ -28,11 +28,7 @@ function scheduleReconnect(gen: number) {
 function connect(gen: number) {
   if (!active || gen !== generation) return;
 
-  const token = localStorage.getItem("jwt_token");
-  let url = WS_BASE + "/ws/notifications";
-  if (token) url += `?token=${encodeURIComponent(token)}`;
-
-  const socket = new WebSocket(url);
+  const socket = new WebSocket(resolveWsUrl(WS_ENDPOINT));
   ws = socket;
 
   socket.onopen = () => {
@@ -52,6 +48,17 @@ function connect(gen: number) {
 
   socket.onclose = () => scheduleReconnect(gen);
   socket.onerror = () => socket.close();
+}
+
+function resolveWsUrl(endpoint: string) {
+  if (endpoint.startsWith("ws://") || endpoint.startsWith("wss://")) {
+    return endpoint;
+  }
+
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+
+  return `${wsProtocol}//${window.location.host}${normalizedEndpoint}`;
 }
 
 function handleVisibilityChange() {
