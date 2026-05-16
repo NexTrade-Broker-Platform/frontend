@@ -1,10 +1,12 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { TrendingUp, Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useRegister } from "@/features/auth/hooks/useRegister";
 import { validateRegisterForm } from "@/features/auth/utils/authValidators";
 import type { FormErrors, RegisterFormData } from "@/features/auth/types/auth";
+import { APP_NAME } from "@/app/config";
+import logo from "@/assets/logo.svg";
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -46,7 +48,7 @@ export function OpenAccountPage() {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   }
 
-  function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: React.BaseSyntheticEvent) {
     e.preventDefault();
     const validationErrors = validateRegisterForm(form);
     if (Object.keys(validationErrors).length > 0) {
@@ -76,18 +78,20 @@ export function OpenAccountPage() {
         <ArrowLeft className="size-4" />
         Back
       </Link>
+
       <div className="w-full max-w-lg">
-        <Link to="/" className="mb-8 block cursor-pointer text-center">
-          <div className="mb-4 inline-flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-chart-2">
-            <TrendingUp className="size-8 text-white" />
-          </div>
+        <Link to="/" className="mb-8 block cursor-pointer text-center animate-hero-in">
+          <img src={logo} alt={APP_NAME} className="mx-auto mb-4 size-16" />
           <h1 className="mb-1 bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-2xl font-bold text-transparent">
-            Lynx Broker
+            {APP_NAME}
           </h1>
           <p className="text-sm text-muted-foreground">Your gateway to smart trading</p>
         </Link>
 
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-lg">
+        <div
+          className="rounded-2xl border border-border bg-card p-6 shadow-lg animate-hero-in sm:p-8"
+          style={{ animationDelay: "150ms" }}
+        >
           <h2 className="mb-1 text-xl font-semibold text-foreground">Create your account</h2>
           <p className="mb-6 text-sm text-muted-foreground">Start trading in minutes — it&apos;s free</p>
 
@@ -108,12 +112,12 @@ export function OpenAccountPage() {
                   className={inputClass(field.id)}
                 />
                 {errors[field.id] && (
-                  <p className="mt-1.5 text-xs text-destructive">{errors[field.id]}</p>
+                  <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors[field.id]}</p>
                 )}
               </div>
             ))}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label htmlFor="firstName" className="mb-1.5 block text-sm font-medium text-foreground">
                   First name
@@ -129,7 +133,7 @@ export function OpenAccountPage() {
                   className={inputClass("firstName")}
                 />
                 {errors.firstName && (
-                  <p className="mt-1.5 text-xs text-destructive">{errors.firstName}</p>
+                  <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.firstName}</p>
                 )}
               </div>
               <div>
@@ -147,7 +151,7 @@ export function OpenAccountPage() {
                   className={inputClass("lastName")}
                 />
                 {errors.lastName && (
-                  <p className="mt-1.5 text-xs text-destructive">{errors.lastName}</p>
+                  <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.lastName}</p>
                 )}
               </div>
             </div>
@@ -167,7 +171,7 @@ export function OpenAccountPage() {
                 className={inputClass("dateOfBirth")}
               />
               {errors.dateOfBirth && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.dateOfBirth}</p>
+                <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.dateOfBirth}</p>
               )}
             </div>
 
@@ -196,7 +200,7 @@ export function OpenAccountPage() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.password}</p>
+                <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.password}</p>
               )}
             </div>
 
@@ -225,7 +229,7 @@ export function OpenAccountPage() {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.confirmPassword}</p>
+                <p className="mt-1.5 wrap-break-word text-xs text-destructive">{errors.confirmPassword}</p>
               )}
             </div>
 

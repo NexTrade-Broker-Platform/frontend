@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -24,7 +24,7 @@ export function LoginPage() {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   }
 
-  function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: React.BaseSyntheticEvent) {
     e.preventDefault();
     const validationErrors = validateLoginForm(form);
     if (Object.keys(validationErrors).length > 0) {
