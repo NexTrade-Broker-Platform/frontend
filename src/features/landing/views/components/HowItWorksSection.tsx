@@ -1,3 +1,4 @@
+import { FadeIn } from "@/shared/components/FadeIn";
 import { StepCard } from "./StepCard";
 
 const steps = [
@@ -22,17 +23,18 @@ export function HowItWorksSection() {
   return (
     <section className="bg-card/30 py-20">
       <div className="mx-auto max-w-6xl px-6 md:px-10">
-        <h2 className="mb-12 text-center text-3xl font-semibold">
-          How it works
-        </h2>
+        <FadeIn className="mb-12">
+          <h2 className="text-center text-3xl font-semibold">How it works</h2>
+        </FadeIn>
         <div className="grid gap-6 md:grid-cols-3">
-          {steps.map((step) => (
-            <StepCard
-              key={step.number}
-              number={step.number}
-              title={step.title}
-              description={step.description}
-            />
+          {steps.map((step, i) => (
+            <FadeIn key={step.number} delay={i * 100}>
+              <StepCard
+                number={step.number}
+                title={step.title}
+                description={step.description}
+              />
+            </FadeIn>
           ))}
         </div>
       </div>

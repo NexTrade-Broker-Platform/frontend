@@ -1,4 +1,6 @@
 import { LineChart, BarChart2, Zap } from "lucide-react";
+import { APP_NAME } from "@/app/config";
+import { FadeIn } from "@/shared/components/FadeIn";
 import { FeatureCard } from "./FeatureCard";
 
 const features = [
@@ -23,15 +25,18 @@ export function FeaturesSection() {
   return (
     <section className="py-20">
       <div className="mx-auto max-w-6xl px-6 md:px-10">
-        <h2 className="mb-12 text-center text-3xl font-semibold">Why Lynx</h2>
+        <FadeIn className="mb-12">
+          <h2 className="text-center text-3xl font-semibold">Why {APP_NAME}</h2>
+        </FadeIn>
         <div className="grid gap-6 md:grid-cols-3">
-          {features.map((feature) => (
-            <FeatureCard
-              key={feature.title}
-              icon={feature.icon}
-              title={feature.title}
-              description={feature.description}
-            />
+          {features.map((feature, i) => (
+            <FadeIn key={feature.title} delay={i * 100}>
+              <FeatureCard
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+              />
+            </FadeIn>
           ))}
         </div>
       </div>
