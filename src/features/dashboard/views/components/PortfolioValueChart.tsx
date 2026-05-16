@@ -7,12 +7,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { AlertCircle } from "lucide-react";
 import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 import type { Portfolio } from "@/features/portfolio/types/portfolio";
 
 type PortfolioValueChartProps = {
   portfolio: Portfolio | undefined;
   isLoading: boolean;
+  isError: boolean;
 };
 
 function buildChartData(portfolio: Portfolio | undefined) {
@@ -40,7 +42,7 @@ function buildChartData(portfolio: Portfolio | undefined) {
   ];
 }
 
-export function PortfolioValueChart({ portfolio, isLoading }: PortfolioValueChartProps) {
+export function PortfolioValueChart({ portfolio, isLoading, isError }: PortfolioValueChartProps) {
   const data = buildChartData(portfolio);
 
   return (
@@ -51,11 +53,17 @@ export function PortfolioValueChart({ portfolio, isLoading }: PortfolioValueChar
       <h2 className="mb-6 text-base font-semibold">Portfolio Value</h2>
 
       {isLoading ? (
-        <div className="h-[280px] animate-pulse rounded-lg bg-muted" />
+        <div className="h-70 animate-pulse rounded-lg bg-muted" />
+      ) : isError ? (
+        <div className="flex h-70 flex-col items-center justify-center gap-2 text-center">
+          <AlertCircle className="size-8 text-destructive/60" />
+          <p className="text-sm font-medium text-destructive">Failed to load portfolio</p>
+          <p className="text-xs text-muted-foreground">Data is temporarily unavailable.</p>
+        </div>
       ) : (
         <ErrorBoundary
           fallback={
-            <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+            <div className="flex h-70 items-center justify-center text-sm text-muted-foreground">
               Chart unavailable
             </div>
           }

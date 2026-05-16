@@ -5,7 +5,7 @@ import { DashboardStatCards } from "./components/DashboardStatCards";
 import { PortfolioValueChart } from "./components/PortfolioValueChart";
 
 export function DashboardPage() {
-  const { data: portfolio, isLoading: portfolioLoading } = usePortfolio();
+  const { data: portfolio, isLoading: portfolioLoading, isError: portfolioError } = usePortfolio();
   const { data: user, isLoading: userLoading } = useCurrentUser();
 
   const primaryBalance = portfolio?.cashBalances.find((b) => b.currency === "USD");
@@ -23,10 +23,12 @@ export function DashboardPage() {
         availableBalance={availableBalance}
         holdingsCount={holdingsCount}
         isLoading={portfolioLoading}
+        isError={portfolioError}
       />
       <PortfolioValueChart
         portfolio={portfolio}
         isLoading={portfolioLoading}
+        isError={portfolioError}
       />
     </div>
   );

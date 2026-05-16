@@ -1,16 +1,27 @@
 import { Link } from "react-router";
-import { Activity, DollarSign } from "lucide-react";
+import { Activity, AlertCircle, DollarSign } from "lucide-react";
 
 type DashboardStatCardsProps = {
   availableBalance: number;
   holdingsCount: number;
   isLoading: boolean;
+  isError: boolean;
 };
+
+function ErrorValue() {
+  return (
+    <div className="mb-2 flex items-center gap-1.5 text-sm text-destructive">
+      <AlertCircle className="size-4 shrink-0" />
+      Failed to load
+    </div>
+  );
+}
 
 export function DashboardStatCards({
   availableBalance,
   holdingsCount,
   isLoading,
+  isError,
 }: DashboardStatCardsProps) {
   return (
     <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -26,6 +37,8 @@ export function DashboardStatCards({
         </div>
         {isLoading ? (
           <div className="mb-2 h-7 w-32 animate-pulse rounded bg-muted" />
+        ) : isError ? (
+          <ErrorValue />
         ) : (
           <p className="mb-2 text-2xl font-semibold tabular-nums">
             ${availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
@@ -48,6 +61,8 @@ export function DashboardStatCards({
         </div>
         {isLoading ? (
           <div className="mb-2 h-7 w-16 animate-pulse rounded bg-muted" />
+        ) : isError ? (
+          <ErrorValue />
         ) : (
           <p className="mb-2 text-2xl font-semibold tabular-nums">{holdingsCount}</p>
         )}
