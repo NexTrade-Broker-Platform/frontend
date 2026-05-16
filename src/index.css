@@ -162,6 +162,21 @@
   --color-wallet-balance-gradient-to: var(--wallet-balance-gradient-to);
 }
 
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@theme inline {
+  --animate-hero-in: hero-in 0.55s ease-out both;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
