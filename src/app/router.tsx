@@ -7,6 +7,7 @@ import { StockDetailPage } from "@/features/markets/views/StockDetailPage";
 import { NewsPage } from "@/features/news/views/NewsPage";
 import { BotTradingPage } from "@/features/bot-trading/views/BotTradingPage";
 import { OrdersPage } from "@/features/orders/views/OrdersPage";
+import { OrderDetailPage } from "@/features/orders/views/OrderDetailPage";
 import { PortfolioPage } from "@/features/portfolio/views/PortfolioPage";
 import { WalletPage } from "@/features/wallet/views/WalletPage";
 import { AppLayout } from "@/app/layouts/AppLayout";
@@ -36,6 +37,7 @@ export function AppRouter() {
         <Route path="/news" element={<NewsPage />} />
         <Route path="/bot-trading" element={<BotTradingPage />} />
         <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/orders/:orderId" element={<OrderDetailPage />} />
         <Route path="/stock/:ticker" element={<StockDetailPage />} />
       </Route>
 

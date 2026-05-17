@@ -44,6 +44,15 @@ export const ordersManager = {
     }
   },
 
+  async getOrder(orderId: string): Promise<Order> {
+    try {
+      const response = await ordersRepository.getOrder(orderId);
+      return mapOrder(response.data.order);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
   async cancelOrder(orderId: string): Promise<Order> {
     try {
       const response = await ordersRepository.cancelOrder(orderId);
