@@ -40,6 +40,15 @@ export const marketsManager = {
     }
   },
 
+  async getOptionDetail(optionId: string): Promise<Option> {
+    try {
+      const response = await marketsRepository.getOption(optionId);
+      return mapOption(response.data.option);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
   async getStockHistory(ticker: string, from: string, to: string): Promise<{ time: string; price: number }[]> {
     try {
       const response = await marketsRepository.getStockHistory(ticker, from, to);
