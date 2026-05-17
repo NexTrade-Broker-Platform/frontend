@@ -5,6 +5,7 @@ import { DashboardPage } from "@/features/dashboard/views/DashboardPage";
 import { MarketsPage } from "@/features/markets/views/MarketsPage";
 import { StockDetailPage } from "@/features/markets/views/StockDetailPage";
 import { NewsPage } from "@/features/news/views/NewsPage";
+import { BotTradingPage } from "@/features/bot-trading/views/BotTradingPage";
 import { OrdersPage } from "@/features/orders/views/OrdersPage";
 import { PortfolioPage } from "@/features/portfolio/views/PortfolioPage";
 import { WalletPage } from "@/features/wallet/views/WalletPage";
@@ -33,6 +34,7 @@ export function AppRouter() {
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/wallet" element={<WalletPage />} />
         <Route path="/news" element={<NewsPage />} />
+        <Route path="/bot-trading" element={<BotTradingPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/stock/:ticker" element={<StockDetailPage />} />
       </Route>
