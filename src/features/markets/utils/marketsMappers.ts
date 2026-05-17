@@ -61,6 +61,7 @@ export function mapOption(dto: OptionDto): Option {
     expiryTime: dto.expiry_time,
     premium: dto.premium,
     isActive: dto.is_active,
+    autoExercise: dto.auto_exercise ?? true,
   };
 }
 

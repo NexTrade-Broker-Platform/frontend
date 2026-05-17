@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import { FileText } from "lucide-react";
 import type { Holding } from "@/features/portfolio/types/portfolio";
 
@@ -12,6 +13,8 @@ function fmt(n: number) {
 }
 
 export function ContractHoldingsList({ holdings, totalCost, isLoading }: Props) {
+  const navigate = useNavigate();
+
   return (
     <div className="mb-6">
       <h2 className="mb-4 text-lg font-semibold sm:text-xl">Contract Holdings</h2>
@@ -69,7 +72,8 @@ export function ContractHoldingsList({ holdings, totalCost, isLoading }: Props) 
                   return (
                     <tr
                       key={`${h.ticker}-${i}`}
-                      className="border-b border-border transition-colors last:border-0 hover:bg-accent"
+                      onClick={() => navigate(`/options/${h.ticker}`)}
+                      className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-accent"
                     >
                       <td className="px-4 py-4 sm:px-6">
                         <div className="flex items-center gap-3">

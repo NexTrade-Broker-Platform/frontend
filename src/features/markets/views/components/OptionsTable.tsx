@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import type { Option } from "@/features/markets/types/markets";
 
 type OptionsTableProps = {
@@ -6,6 +7,8 @@ type OptionsTableProps = {
 };
 
 export function OptionsTable({ options, isLoading }: OptionsTableProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
@@ -35,7 +38,8 @@ export function OptionsTable({ options, isLoading }: OptionsTableProps) {
               options.map((option) => (
                 <tr
                   key={option.optionId}
-                  className="border-b border-border transition-colors last:border-0 hover:bg-accent"
+                  onClick={() => navigate(`/options/${option.optionId}`)}
+                  className="cursor-pointer border-b border-border transition-colors last:border-0 hover:bg-accent"
                 >
                   <td className="px-6 py-4 font-medium text-foreground">{option.underlyingTicker}</td>
                   <td className="px-6 py-4">

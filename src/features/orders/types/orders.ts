@@ -7,7 +7,7 @@ export type OrderStatus =
   | "REJECTED"
   | "CANCELLED"
   | "EXPIRED";
-export type InstrumentType = "STOCK" | "ETF" | "CRYPTO";
+export type InstrumentType = "STOCK" | "OPTION" | "ETF" | "CRYPTO";
 
 export interface OrderDto {
   order_id: string;

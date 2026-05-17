@@ -2,6 +2,7 @@ import { api } from "@/shared/lib/api/httpClient";
 import type {
   MarketStatusResponseDto,
   MarketsQueryParams,
+  OptionDetailResponseDto,
   OptionsListResponseDto,
   StockDetailResponseDto,
   StockHistoryResponseDto,
@@ -20,6 +21,10 @@ export const marketsRepository = {
 
   getOptions() {
     return api.get<OptionsListResponseDto>("/market/options");
+  },
+
+  getOption(optionId: string) {
+    return api.get<OptionDetailResponseDto>(`/market/options/${optionId}`);
   },
 
   getStockHistory(ticker: string, from: string, to: string) {

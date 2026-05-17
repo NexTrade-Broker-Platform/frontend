@@ -36,6 +36,11 @@ export interface OptionDto {
   expiry_time: string;
   premium: number;
   is_active: boolean;
+  auto_exercise: boolean;
+}
+
+export interface OptionDetailResponseDto {
+  option: OptionDto;
 }
 
 export interface StockHistoryResponseDto {
@@ -71,6 +76,7 @@ export interface Option {
   expiryTime: string;
   premium: number;
   isActive: boolean;
+  autoExercise: boolean;
 }
 
 export interface MarketsQueryParams {

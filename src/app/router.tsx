@@ -8,6 +8,7 @@ import { AdminProtectedRoute } from "@/features/admin/views/components/AdminProt
 import { DashboardPage } from "@/features/dashboard/views/DashboardPage";
 import { MarketsPage } from "@/features/markets/views/MarketsPage";
 import { StockDetailPage } from "@/features/markets/views/StockDetailPage";
+import { OptionContractDetailPage } from "@/features/markets/views/OptionContractDetailPage";
 import { NewsPage } from "@/features/news/views/NewsPage";
 import { BotTradingPage } from "@/features/bot-trading/views/BotTradingPage";
 import { OrdersPage } from "@/features/orders/views/OrdersPage";
@@ -43,6 +44,7 @@ export function AppRouter() {
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:orderId" element={<OrderDetailPage />} />
         <Route path="/stock/:ticker" element={<StockDetailPage />} />
+        <Route path="/options/:optionId" element={<OptionContractDetailPage />} />
       </Route>
 
       {/* Admin */}
