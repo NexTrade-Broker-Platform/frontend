@@ -15,6 +15,10 @@ export const ordersRepository = {
     return api.get<OrdersResponseDto>("/orders", { params });
   },
 
+  getOrder(orderId: string) {
+    return api.get<PlaceOrderResponseDto>(`/orders/${orderId}`);
+  },
+
   cancelOrder(orderId: string) {
     return api.delete<PlaceOrderResponseDto>(`/orders/${orderId}`);
   },

@@ -10,6 +10,7 @@ function mapAuthUser(dto: AuthUserDto): AuthUser {
     dateOfBirth: dto.dateOfBirth ?? dto.date_of_birth ?? "",
     createdAt: dto.createdAt ?? dto.created_at ?? "",
     isActive: dto.active ?? dto.is_active ?? false,
+    isAdmin: dto.isAdmin ?? dto.is_admin ?? false,
   };
 }
 

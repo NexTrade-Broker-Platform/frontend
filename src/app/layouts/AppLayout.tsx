@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import {
+  Bot,
   Briefcase,
   ClipboardList,
   LayoutDashboard,
@@ -32,6 +33,9 @@ export function AppLayout() {
       { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { path: "/news", label: "News", icon: Newspaper },
       { path: "/markets", label: "Market", icon: TrendingUp },
+    ],
+    [
+      { path: "/bot-trading", label: "Bot Trading", icon: Bot },
     ],
     [
       { path: "/portfolio", label: "Portfolio", icon: Briefcase },

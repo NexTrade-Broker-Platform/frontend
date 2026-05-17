@@ -44,6 +44,7 @@ export interface AuthUser {
   dateOfBirth: string;
   createdAt: string;
   isActive: boolean;
+  isAdmin: boolean;
 }
 
 export interface AuthResult {

@@ -1,161 +1,150 @@
-import { ArrowDownRight, ArrowUpRight, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { ArrowDownLeft, ArrowUpRight, Loader2, Receipt } from "lucide-react";
+import type { useInfiniteWalletTransactions } from "@/features/wallet/hooks/useInfiniteWalletTransactions";
 import type { WalletTransaction } from "@/features/wallet/types/wallet";
+import { FadeIn } from "@/shared/components/FadeIn";
 
-type WalletTransactionHistoryProps = {
-  transactions: WalletTransaction[];
-  isLoading?: boolean;
-  errorMessage?: string;
+type Props = {
+  query: ReturnType<typeof useInfiniteWalletTransactions>;
 };
 
-function getTransactionDescription(type: WalletTransaction["type"]) {
-  switch (type) {
-    case "DEPOSIT":
-      return "Deposit";
-    case "WITHDRAWAL":
-      return "Withdrawal";
-    case "ORDER_HOLD":
-      return "Order hold";
-    case "ORDER_RELEASE":
-      return "Order release";
-    default:
-      return "Wallet transaction";
-  }
-}
+const TYPE_STYLES: Record<WalletTransaction["type"], { icon: React.ElementType; iconBg: string; iconColor: string }> = {
+  DEPOSIT:       { icon: ArrowDownLeft, iconBg: "bg-success/10",     iconColor: "text-success" },
+  WITHDRAWAL:    { icon: ArrowUpRight,  iconBg: "bg-destructive/10", iconColor: "text-destructive" },
+  ORDER_HOLD:    { icon: ArrowUpRight,  iconBg: "bg-primary/10",     iconColor: "text-primary" },
+  ORDER_RELEASE: { icon: ArrowDownLeft, iconBg: "bg-chart-2/10",     iconColor: "text-chart-2" },
+};
 
-function getSignedAmount(transaction: WalletTransaction) {
-  if (transaction.type === "WITHDRAWAL" || transaction.type === "ORDER_HOLD") {
-    return -Math.abs(transaction.amount);
-  }
+const TYPE_LABELS: Record<WalletTransaction["type"], string> = {
+  DEPOSIT:       "Deposit",
+  WITHDRAWAL:    "Withdrawal",
+  ORDER_HOLD:    "Order Hold",
+  ORDER_RELEASE: "Order Release",
+};
 
-  return Math.abs(transaction.amount);
-}
-
-function getTransactionIconStyles(type: WalletTransaction["type"]) {
-  switch (type) {
-    case "DEPOSIT":
-      return {
-        containerClassName: "bg-surface-positive",
-        iconClassName: "text-success",
-      };
-    case "WITHDRAWAL":
-      return {
-        containerClassName: "bg-surface-negative",
-        iconClassName: "text-destructive",
-      };
-    case "ORDER_HOLD":
-      return {
-        containerClassName: "bg-surface-info",
-        iconClassName: "text-primary",
-      };
-    case "ORDER_RELEASE":
-      return {
-        containerClassName: "bg-surface-accent",
-        iconClassName: "text-chart-2",
-      };
-    default:
-      return {
-        containerClassName: "bg-muted",
-        iconClassName: "text-muted-foreground",
-      };
-  }
+function signedAmount(tx: WalletTransaction) {
+  return tx.type === "WITHDRAWAL" || tx.type === "ORDER_HOLD"
+    ? -Math.abs(tx.amount)
+    : Math.abs(tx.amount);
 }
 
 function formatDate(value: string) {
-  if (!value) return "Unknown date";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Unknown date";
-  }
-
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function WalletTransactionHistory({
-  transactions,
-  isLoading = false,
-  errorMessage,
-}: WalletTransactionHistoryProps) {
+function formatTime(value: string) {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+}
+
+export function WalletTransactionHistory({ query }: Props) {
+  const { data, isLoading, isError, error, isFetchingNextPage, hasNextPage, fetchNextPage } = query;
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const transactions = data?.pages.flatMap((p) => p.transactions) ?? [];
+
   return (
-    <div className="rounded-xl border border-border bg-card p-6 text-card-foreground">
-      <h3 className="mb-6">Transaction History</h3>
-
-      {isLoading && (
-        <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" />
-          Loading transactions...
+    <FadeIn delay={250}>
+      <div className="rounded-2xl border border-border bg-card">
+        <div className="border-b border-border px-5 py-4">
+          <h3 className="text-base font-semibold">Transaction History</h3>
         </div>
-      )}
 
-      {!isLoading && errorMessage && (
-        <div className="rounded-lg border border-destructive bg-surface-negative p-4 text-sm text-destructive">
-          {errorMessage}
-        </div>
-      )}
-
-      {!isLoading && !errorMessage && transactions.length === 0 && (
-        <div className="rounded-lg border border-border p-4 text-sm text-muted-foreground">
-          No transactions yet.
-        </div>
-      )}
-
-      {!isLoading && !errorMessage && transactions.length > 0 && (
-        <div className="space-y-3">
-          {transactions.map((tx) => {
-            const signedAmount = getSignedAmount(tx);
-            const isPositive = signedAmount > 0;
-            const iconStyles = getTransactionIconStyles(tx.type);
-
-            return (
-              <div
-                key={tx.id}
-                className="flex items-center justify-between rounded-lg border border-border p-4"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`flex size-10 items-center justify-center rounded-lg ${iconStyles.containerClassName}`}
-                  >
-                    {isPositive ? (
-                      <ArrowDownRight
-                        className={`size-5 ${iconStyles.iconClassName}`}
-                      />
-                    ) : (
-                      <ArrowUpRight
-                        className={`size-5 ${iconStyles.iconClassName}`}
-                      />
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-sm text-foreground">
-                      {getTransactionDescription(tx.type)}
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      {formatDate(tx.createdAt)}
-                    </div>
-                  </div>
+        {/* Initial loading */}
+        {isLoading && (
+          <div className="space-y-0 divide-y divide-border">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="size-9 animate-pulse rounded-xl bg-muted" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3.5 w-24 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-16 animate-pulse rounded bg-muted" />
                 </div>
-
-                <div
-                  className={isPositive ? "text-success" : "text-foreground"}
-                >
-                  {isPositive ? "+" : "-"}$
-                  {Math.abs(signedAmount).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </div>
+                <div className="h-4 w-16 animate-pulse rounded bg-muted" />
               </div>
-            );
-          })}
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {!isLoading && isError && (
+          <div className="px-5 py-6 text-sm text-destructive">
+            {(error as Error).message}
+          </div>
+        )}
+
+        {/* Empty */}
+        {!isLoading && !isError && transactions.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
+            <Receipt className="size-10 opacity-20" />
+            <p className="text-sm">No transactions yet.</p>
+          </div>
+        )}
+
+        {/* Transaction rows */}
+        {transactions.length > 0 && (
+          <ul className="divide-y divide-border">
+            {transactions.map((tx) => {
+              const amt = signedAmount(tx);
+              const isPositive = amt > 0;
+              const style = TYPE_STYLES[tx.type] ?? TYPE_STYLES.DEPOSIT;
+              const Icon = style.icon;
+
+              return (
+                <li key={tx.id} className="flex items-center gap-4 px-4 py-4 transition-colors hover:bg-accent/40 sm:px-5">
+                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${style.iconBg}`}>
+                    <Icon className={`size-4 ${style.iconColor}`} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">{TYPE_LABELS[tx.type]}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(tx.createdAt)}
+                      <span className="mx-1 opacity-40">·</span>
+                      {formatTime(tx.createdAt)}
+                    </p>
+                  </div>
+
+                  <span className={`shrink-0 tabular-nums text-sm font-semibold ${isPositive ? "text-success" : "text-foreground"}`}>
+                    {isPositive ? "+" : "-"}${Math.abs(amt).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {/* Sentinel + loading more */}
+        <div ref={sentinelRef} className="px-5 py-4 text-center">
+          {isFetchingNextPage && (
+            <Loader2 className="mx-auto size-4 animate-spin text-muted-foreground" />
+          )}
+          {!hasNextPage && transactions.length > 0 && (
+            <p className="text-xs text-muted-foreground">All transactions loaded</p>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </FadeIn>
   );
 }

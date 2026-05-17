@@ -14,7 +14,7 @@ export const walletRepository = {
   },
 
   withdraw(data: WithdrawRequestDto) {
-    return api.post<WithdrawRequestDto>("/funds/withdraw", data);
+    return api.post<WithdrawResponseDto>("/funds/withdraw", data);
   },
 
   getBalance(currency = "USD") {

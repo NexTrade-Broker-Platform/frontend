@@ -1,63 +1,54 @@
-import { WalletActionForm } from "@/features/wallet/views/components/WalletActionForm";
-import { WalletSummaryCards } from "@/features/wallet/views/components/WalletSummaryCards";
-import { WalletTransactionHistory } from "@/features/wallet/views/components/WalletTransactionHistory";
+import { useMemo } from "react";
+import { FadeIn } from "@/shared/components/FadeIn";
 import { useWalletBalance } from "@/features/wallet/hooks/useWalletBalance";
-import { useWalletTransactions } from "@/features/wallet/hooks/useWalletTransactions";
+import { useInfiniteWalletTransactions } from "@/features/wallet/hooks/useInfiniteWalletTransactions";
+import { WalletSummaryCards } from "@/features/wallet/views/components/WalletSummaryCards";
+import { WalletActionForm } from "@/features/wallet/views/components/WalletActionForm";
+import { WalletFlowCard } from "@/features/wallet/views/components/WalletFlowCard";
+import { WalletTransactionHistory } from "@/features/wallet/views/components/WalletTransactionHistory";
 
 export function WalletPage() {
   const currency = "USD";
 
-  const {
-    data: balanceData,
-    isLoading: isBalanceLoading,
-    error: balanceError,
-  } = useWalletBalance(currency);
+  const { data: balanceData, isLoading: isBalanceLoading, error: balanceError } = useWalletBalance(currency);
+  const txQuery = useInfiniteWalletTransactions();
 
-  // const {
-  //   data: transactionsData,
-  //   isLoading: isTransactionsLoading,
-  //   error: transactionsError,
-  // } = useWalletTransactions(0, 10);
-
-  // const transactions = transactionsData?.transactions ?? [];
-  const transactions = [];
+  const allTransactions = useMemo(
+    () => txQuery.data?.pages.flatMap((p) => p.transactions) ?? [],
+    [txQuery.data],
+  );
 
   return (
-    <div className="p-4 lg:p-8">
-      <div className="mb-8">
-        <h1 className="mb-2">Wallet</h1>
-        <p className="text-muted-foreground">
-          Manage your funds and view transaction history
-        </p>
-      </div>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <FadeIn>
+        <div className="mb-8">
+          <p className="mb-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Account
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">Wallet</h1>
+          <p className="mt-2 text-muted-foreground">Manage your funds and view transaction history</p>
 
-      {balanceError && (
-        <div className="mb-6 rounded-lg border border-destructive bg-surface-negative p-4 text-sm text-destructive">
-          {balanceError.message}
+          {balanceError && (
+            <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+              {balanceError.message}
+            </div>
+          )}
         </div>
-      )}
+      </FadeIn>
 
       <WalletSummaryCards
         availableBalance={balanceData?.wallet.availableBalance}
         reservedBalance={balanceData?.wallet.reservedBalance}
         currency={balanceData?.wallet.currency ?? currency}
-        transactions={transactions}
         isLoading={isBalanceLoading}
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1">
-          <WalletActionForm />
-        </div>
-
-        {/* <div className="lg:col-span-2">
-          <WalletTransactionHistory
-            transactions={transactions}
-            isLoading={isTransactionsLoading}
-            errorMessage={transactionsError?.message}
-          />
-        </div> */}
+      <div className="mb-6 grid gap-6 lg:grid-cols-2">
+        <WalletActionForm />
+        <WalletFlowCard transactions={allTransactions} currency={currency} />
       </div>
+
+      <WalletTransactionHistory query={txQuery} />
     </div>
   );
 }
