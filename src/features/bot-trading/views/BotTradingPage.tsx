@@ -3,8 +3,9 @@ import { Bot } from "lucide-react";
 import { FadeIn } from "@/shared/components/FadeIn";
 import { BotMarketingSection } from "./components/BotMarketingSection";
 import { BotRiskConfirmation } from "./components/BotRiskConfirmation";
-import { BotDashboard } from "./components/BotDashboard";
+import { BotDashboard, BOT_LOG_STORAGE_KEY } from "./components/BotDashboard";
 import { BotDeactivateConfirmation } from "./components/BotDeactivateConfirmation";
+import { BOT_PROGRESS_STORAGE_KEY } from "./components/BotProgressChart";
 
 type View = "marketing" | "confirm" | "dashboard" | "deactivate-confirm";
 
@@ -26,6 +27,8 @@ export function BotTradingPage() {
 
   const handleDeactivateConfirmed = () => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(BOT_LOG_STORAGE_KEY);
+    localStorage.removeItem(BOT_PROGRESS_STORAGE_KEY);
     setView("marketing");
   };
 
