@@ -79,8 +79,8 @@ export function StockPriceChart({ ticker, change }: Props) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const [period,     setPeriod]     = useState<Period>("1m");
-  const [mode,       setMode]       = useState<ChartMode>("line");
+  const [period,     setPeriod]     = useState<Period>("all");
+  const [mode,       setMode]       = useState<ChartMode>("candle");
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [view,       setView]       = useState({ start: 0, end: 1 });

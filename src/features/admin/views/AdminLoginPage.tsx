@@ -26,7 +26,7 @@ export function AdminLoginPage() {
         return;
       }
 
-      markAdminAuthenticated();
+      markAdminAuthenticated(result.token);
       navigate("/admin/dashboard", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed.");

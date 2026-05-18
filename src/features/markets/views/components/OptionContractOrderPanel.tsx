@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { usePlaceOrder } from "@/features/orders/hooks/usePlaceOrder";
+import { useFeeRate } from "@/features/markets/hooks/useFeeRate";
+import { useExchangeFeeRate } from "@/features/markets/hooks/useExchangeFeeRate";
 import type { OrderSide, OrderType } from "@/features/orders/types/orders";
 
 type Props = {
@@ -13,6 +15,8 @@ type Props = {
 
 export function OptionContractOrderPanel({ optionId, premium, isActive, userQuantity = 0 }: Props) {
   const { mutate: placeOrder, isPending } = usePlaceOrder();
+  const PLATFORM_FEE_RATE = useFeeRate();
+  const EXCHANGE_FEE_RATE = useExchangeFeeRate();
 
   const [side, setSide] = useState<OrderSide>("BUY");
   const [orderType, setOrderType] = useState<OrderType>("MARKET");
@@ -21,7 +25,16 @@ export function OptionContractOrderPanel({ optionId, premium, isActive, userQuan
 
   const qty = parseInt(quantity, 10) || 0;
   const effectivePrice = orderType === "MARKET" ? premium : parseFloat(limitPrice) || 0;
-  const estimatedTotal = qty * effectivePrice;
+  const estimatedSubtotal = qty * effectivePrice;
+  const platformFee = estimatedSubtotal * PLATFORM_FEE_RATE;
+  const exchangeFee = estimatedSubtotal * EXCHANGE_FEE_RATE;
+  const estimatedTotal = estimatedSubtotal + platformFee + exchangeFee;
+
+  function fmtFee(v: number): string {
+    if (v >= 0.01) return `$${v.toFixed(2)}`;
+    if (v >= 0.001) return `$${v.toFixed(3)}`;
+    return `$${v.toFixed(5)}`;
+  }
 
   const canSell = side === "SELL" && userQuantity > 0;
   const isSellDisabled = side === "SELL" && userQuantity === 0;
@@ -176,15 +189,25 @@ export function OptionContractOrderPanel({ optionId, premium, isActive, userQuan
 
         {/* Summary */}
         {qty > 0 && (
-          <div className="rounded-lg bg-muted/50 p-4 text-sm">
-            <div className="mb-1.5 flex items-center justify-between">
+          <div className="rounded-lg bg-muted/50 p-4 text-sm space-y-1.5">
+            <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Premium per contract</span>
-              <span className="text-foreground">
-                ${orderType === "MARKET" ? premium.toFixed(2) : (parseFloat(limitPrice) || 0).toFixed(2)}
-              </span>
+              <span className="text-foreground">${effectivePrice.toFixed(2)}</span>
             </div>
-            <div className="flex items-center justify-between font-medium">
-              <span className="text-muted-foreground">Estimated Total</span>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Subtotal ({qty} × ${effectivePrice.toFixed(2)})</span>
+              <span className="text-foreground">${estimatedSubtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Broker fee ({(PLATFORM_FEE_RATE * 100).toFixed(2)}%)</span>
+              <span className="text-foreground">${platformFee.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Exchange fee ({(EXCHANGE_FEE_RATE * 100).toFixed(4)}%)</span>
+              <span className="text-foreground">{fmtFee(exchangeFee)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-1.5 font-semibold">
+              <span className="text-foreground">Est. Total</span>
               <span className="text-foreground">${estimatedTotal.toFixed(2)}</span>
             </div>
           </div>

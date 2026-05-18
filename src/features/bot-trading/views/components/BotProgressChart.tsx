@@ -51,7 +51,7 @@ export function BotProgressChart({ running, currentCash, livePositionsValue }: P
   });
 
   const pendingEventRef = useRef<EventType | null>(null);
-  const wasRunningRef = useRef(false);
+  const wasRunningRef = useRef<boolean | null>(null);
   const cashRef = useRef(currentCash);
   const posValueRef = useRef(livePositionsValue);
 
@@ -64,8 +64,12 @@ export function BotProgressChart({ running, currentCash, livePositionsValue }: P
     localStorage.setItem(BOT_PROGRESS_STORAGE_KEY, JSON.stringify(points));
   }, [points]);
 
-  // Reset chart on bot start
+  // Reset chart only when bot transitions from stopped → running (not on remount)
   useEffect(() => {
+    if (wasRunningRef.current === null) {
+      wasRunningRef.current = running;
+      return;
+    }
     if (running && !wasRunningRef.current) {
       setPoints([]);
       pendingEventRef.current = null;
@@ -73,22 +77,28 @@ export function BotProgressChart({ running, currentCash, livePositionsValue }: P
     wasRunningRef.current = running;
   }, [running]);
 
-  // Capture ORDER_UPDATE events to mark on the chart
+  // Capture ORDER_UPDATE events to mark on the chart.
+  // Pump (spoof) orders get an immediate snapshot so they're never lost between 5s ticks.
   useEffect(() => {
     const handler = (payload: unknown) => {
       const p = payload as OrderPayload;
-      if (p.status !== "FILLED" && p.status !== "PARTIALLY_FILLED") return;
       if (p.order_type === "LIMIT" && p.side === "BUY") {
-        pendingEventRef.current = "pump";
-      } else if (p.side === "BUY") {
-        pendingEventRef.current = "buy";
-      } else if (p.side === "SELL") {
-        pendingEventRef.current = "sell";
+        // Immediate snapshot for pump events — same pattern as MARKET_EVENT
+        if (!running) return;
+        const cash = cashRef.current;
+        const total = cash + posValueRef.current;
+        const time = new Date().toLocaleTimeString(undefined, {
+          hour: "2-digit", minute: "2-digit", second: "2-digit",
+        });
+        setPoints((prev) => [...prev.slice(-120), { time, total, cash, event: "pump" }]);
+      } else if (p.status === "FILLED" || p.status === "PARTIALLY_FILLED") {
+        if (p.side === "BUY") pendingEventRef.current = "buy";
+        else if (p.side === "SELL") pendingEventRef.current = "sell";
       }
     };
     wsClient.subscribe("ORDER_UPDATE", handler);
     return () => wsClient.unsubscribe("ORDER_UPDATE", handler);
-  }, []);
+  }, [running]);
 
   // Take an immediate snapshot when a market event fires
   useEffect(() => {

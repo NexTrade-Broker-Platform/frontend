@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Bot, DollarSign, Loader2, Percent, Users, AlertCircle, Check, X } from "lucide-react";
+import { Bot, DollarSign, Loader2, Percent, Users, AlertCircle, Check, X, ArrowRight, History, Wallet } from "lucide-react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import { useAdminStats } from "@/features/admin/hooks/useAdminStats";
 import { useUpdateFeeRate } from "@/features/admin/hooks/useUpdateFeeRate";
 import { FadeIn } from "@/shared/components/FadeIn";
 
 function StatCard({
-  label, value, sub, icon: Icon, iconBg, iconColor, isLoading,
+  label, value, sub, icon: Icon, iconBg, iconColor, isLoading, link,
 }: {
   label: string;
   value: React.ReactNode;
@@ -15,25 +16,37 @@ function StatCard({
   iconBg: string;
   iconColor: string;
   isLoading?: boolean;
+  link?: { to: string; label: string };
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="flex flex-col rounded-2xl border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{label}</span>
         <div className={`flex size-9 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`size-5 ${iconColor}`} />
         </div>
       </div>
-      {isLoading ? (
-        <div className="space-y-2">
-          <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
-          <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-        </div>
-      ) : (
-        <>
-          <p className="text-3xl font-bold tabular-nums">{value}</p>
-          {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
-        </>
+      <div className="flex-1">
+        {isLoading ? (
+          <div className="space-y-2">
+            <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
+            <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+          </div>
+        ) : (
+          <>
+            <p className="text-3xl font-bold tabular-nums">{value}</p>
+            {sub && <p className="mt-1 text-sm text-muted-foreground">{sub}</p>}
+          </>
+        )}
+      </div>
+      {link && (
+        <Link
+          to={link.to}
+          className="mt-6 flex items-center justify-between rounded-xl bg-muted/50 px-4 py-2 text-xs font-semibold transition-colors hover:bg-muted"
+        >
+          {link.label}
+          <ArrowRight className="size-3" />
+        </Link>
       )}
     </div>
   );
@@ -131,6 +144,9 @@ function FeeRateCard({ feeRate, isLoading }: { feeRate: number | undefined; isLo
   );
 }
 
+import { AdminRealtimeChart } from "./components/AdminRealtimeChart";
+import { AdminAnalyticsSection } from "./components/AdminAnalyticsSection";
+
 export function AdminDashboardPage() {
   const { data: stats, isLoading, isError, error } = useAdminStats();
 
@@ -155,15 +171,27 @@ export function AdminDashboardPage() {
         </FadeIn>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <FadeIn delay={75}>
           <StatCard
             label="Total Revenue"
             value={stats ? `$${stats.totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}
-            sub="Cumulative exchange fees"
+            sub="Cumulative platform fees"
             icon={DollarSign}
             iconBg="bg-success/10"
             iconColor="text-success"
+            isLoading={isLoading}
+          />
+        </FadeIn>
+
+        <FadeIn delay={100}>
+          <StatCard
+            label="Platform Money"
+            value={stats ? `$${stats.totalMoney.toLocaleString("en-US", { minimumFractionDigits: 2 })}` : "—"}
+            sub="Total user balances"
+            icon={Wallet}
+            iconBg="bg-primary/10"
+            iconColor="text-primary"
             isLoading={isLoading}
           />
         </FadeIn>
@@ -181,6 +209,7 @@ export function AdminDashboardPage() {
             iconBg="bg-primary/10"
             iconColor="text-primary"
             isLoading={isLoading}
+            link={{ to: "/admin/users", label: "Manage Users" }}
           />
         </FadeIn>
 
@@ -194,6 +223,29 @@ export function AdminDashboardPage() {
             iconColor="text-violet-400"
             isLoading={isLoading}
           />
+        </FadeIn>
+
+        <FadeIn delay={250}>
+          <StatCard
+            label="Total Orders"
+            value={stats?.totalOrders.toLocaleString() ?? "—"}
+            sub="All-time platform orders"
+            icon={History}
+            iconBg="bg-amber-500/10"
+            iconColor="text-amber-500"
+            isLoading={isLoading}
+            link={{ to: "/admin/orders", label: "View Order History" }}
+          />
+        </FadeIn>
+      </div>
+
+      <div className="space-y-8">
+        <FadeIn delay={300}>
+          <AdminAnalyticsSection />
+        </FadeIn>
+
+        <FadeIn delay={400}>
+          <AdminRealtimeChart />
         </FadeIn>
       </div>
     </div>

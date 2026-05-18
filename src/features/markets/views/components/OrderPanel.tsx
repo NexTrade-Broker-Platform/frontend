@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Loader2, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { usePlaceOrder } from "@/features/orders/hooks/usePlaceOrder";
+import { useFeeRate } from "@/features/markets/hooks/useFeeRate";
+import { useExchangeFeeRate } from "@/features/markets/hooks/useExchangeFeeRate";
 import type { InstrumentType, OrderSide, OrderType } from "@/features/orders/types/orders";
 
 type Props = {
@@ -11,19 +13,29 @@ type Props = {
 
 export function OrderPanel({ ticker, price }: Props) {
   const { mutate: placeOrder, isPending: isPlacing } = usePlaceOrder();
+  const PLATFORM_FEE_RATE = useFeeRate();
+  const EXCHANGE_FEE_RATE = useExchangeFeeRate();
 
   const [side,       setSide]       = useState<OrderSide>("BUY");
   const [orderType,  setOrderType]  = useState<OrderType>("MARKET");
   const [quantity,   setQuantity]   = useState("");
   const [limitPrice, setLimitPrice] = useState("");
 
-  const estimatedTotal =
-    (parseInt(quantity, 10) || 0) *
-    (orderType === "MARKET" ? price : parseFloat(limitPrice) || 0);
+  const qty = parseInt(quantity, 10) || 0;
+  const effectivePrice = orderType === "MARKET" ? price : parseFloat(limitPrice) || 0;
+  const estimatedSubtotal = qty * effectivePrice;
+  const platformFee = estimatedSubtotal * PLATFORM_FEE_RATE;
+  const exchangeFee = estimatedSubtotal * EXCHANGE_FEE_RATE;
+  const estimatedTotal = estimatedSubtotal + platformFee + exchangeFee;
+
+  function fmtFee(v: number): string {
+    if (v >= 0.01) return `$${v.toFixed(2)}`;
+    if (v >= 0.001) return `$${v.toFixed(3)}`;
+    return `$${v.toFixed(5)}`;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const qty = parseInt(quantity, 10);
     if (!qty || qty <= 0) { toast.error("Please enter a valid quantity"); return; }
     if (orderType === "LIMIT" && (!limitPrice || parseFloat(limitPrice) <= 0)) {
       toast.error("Please enter a valid limit price");
@@ -134,16 +146,28 @@ export function OrderPanel({ ticker, price }: Props) {
 
         {/* Summary */}
         {quantity && (
-          <div className="rounded-lg bg-muted/50 p-4">
-            <div className="mb-2 flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Estimated Total</span>
-              <span className="text-foreground">${estimatedTotal.toFixed(2)}</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
+          <div className="rounded-lg bg-muted/50 p-4 space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Price per share</span>
               <span className="text-foreground">
-                ${orderType === "MARKET" ? price.toFixed(2) : (parseFloat(limitPrice) || 0).toFixed(2)}
+                ${effectivePrice.toFixed(2)}
               </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Subtotal ({qty} × ${effectivePrice.toFixed(2)})</span>
+              <span className="text-foreground">${estimatedSubtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Broker fee ({(PLATFORM_FEE_RATE * 100).toFixed(2)}%)</span>
+              <span className="text-foreground">${platformFee.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Exchange fee ({(EXCHANGE_FEE_RATE * 100).toFixed(4)}%)</span>
+              <span className="text-foreground">{fmtFee(exchangeFee)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-border pt-1.5 font-semibold">
+              <span className="text-foreground">Est. Total</span>
+              <span className="text-foreground">${estimatedTotal.toFixed(2)}</span>
             </div>
           </div>
         )}

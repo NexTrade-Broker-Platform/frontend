@@ -1,4 +1,4 @@
-const AUTH_STORAGE_KEY = "isAuthenticated";
+const AUTH_STORAGE_KEY = "nextrade_user_isAuthenticated";
 
 export function isAuthenticated(): boolean {
   return localStorage.getItem(AUTH_STORAGE_KEY) === "true";

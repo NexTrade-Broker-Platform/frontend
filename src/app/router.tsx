@@ -3,6 +3,9 @@ import { LoginPage } from "@/features/auth/views/LoginPage";
 import { OpenAccountPage } from "@/features/auth/views/OpenAccountPage";
 import { AdminLoginPage } from "@/features/admin/views/AdminLoginPage";
 import { AdminDashboardPage } from "@/features/admin/views/AdminDashboardPage";
+import { UserListPage } from "@/features/admin/views/UserListPage";
+import { UserDetailPage } from "@/features/admin/views/UserDetailPage";
+import { PlatformOrdersPage } from "@/features/admin/views/PlatformOrdersPage";
 import { AdminLayout } from "@/features/admin/views/components/AdminLayout";
 import { AdminProtectedRoute } from "@/features/admin/views/components/AdminProtectedRoute";
 import { DashboardPage } from "@/features/dashboard/views/DashboardPage";
@@ -57,6 +60,10 @@ export function AppRouter() {
         }
       >
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/users" element={<UserListPage />} />
+        <Route path="/admin/users/:userId" element={<UserDetailPage />} />
+        <Route path="/admin/orders" element={<PlatformOrdersPage />} />
+        <Route path="/admin/users/:userId/orders" element={<PlatformOrdersPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

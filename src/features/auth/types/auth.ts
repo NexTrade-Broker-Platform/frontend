@@ -33,6 +33,7 @@ export interface AuthUserDto {
 export interface AuthResponseDto {
   message?: string;
   user?: AuthUserDto;
+  token?: string;
 }
 
 export interface AuthUser {
@@ -49,6 +50,7 @@ export interface AuthUser {
 
 export interface AuthResult {
   user: AuthUser | null;
+  token?: string | null;
 }
 
 export interface LoginFormData {

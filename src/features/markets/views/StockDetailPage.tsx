@@ -131,7 +131,7 @@ export function StockDetailPage() {
                   Volume
                 </span>
                 <span className="text-sm font-medium text-foreground">
-                  {(livePrice?.volume ?? stock.volume).toLocaleString()}
+                  {(() => { const v = livePrice?.volume ?? stock.volume; return v > 0 ? v.toLocaleString() : "N/A"; })()}
                 </span>
               </div>
               <div className="flex flex-1 flex-col px-4 py-3">

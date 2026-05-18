@@ -1,5 +1,5 @@
 import { adminApi } from "@/shared/lib/api/adminApiClient";
-import type { AdminStatsDto, UpdateFeeRateDto, UpdateFeeRateResponseDto } from "@/features/admin/types/admin";
+import type { AdminStatsDto, AdminUser, AdminOrder, UpdateFeeRateDto, UpdateFeeRateResponseDto } from "@/features/admin/types/admin";
 
 export const adminRepository = {
   getStats() {
@@ -8,5 +8,17 @@ export const adminRepository = {
 
   updateFeeRate(data: UpdateFeeRateDto) {
     return adminApi.patch<UpdateFeeRateResponseDto>("/admin/fee-rate", data);
+  },
+
+  getUsers() {
+    return adminApi.get<AdminUser[]>("/admin/users");
+  },
+
+  getOrders() {
+    return adminApi.get<AdminOrder[]>("/admin/orders");
+  },
+
+  getUserOrders(userId: string) {
+    return adminApi.get<AdminOrder[]>(`/admin/users/${userId}/orders`);
   },
 };

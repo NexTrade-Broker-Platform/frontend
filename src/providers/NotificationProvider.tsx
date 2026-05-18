@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { ReactNode } from 'react';
 import { wsClient } from '@/shared/lib/ws/wsClient';
+import type { Candle } from '@/features/markets/types/markets';
 
 export interface PriceUpdate {
   ticker: string;
@@ -34,6 +35,41 @@ const NotificationContext = createContext<NotificationContextValue>({
   marketEvents: [],
 });
 
+// --------------------------------------------------------------------------- //
+// Module-level price history — persists across component mount/unmount cycles  //
+// so chart data survives page navigation.                                       //
+// --------------------------------------------------------------------------- //
+
+interface PriceTick { time: number; price: number }
+
+const _priceHistory = new Map<string, PriceTick[]>();
+const PRICE_HISTORY_MAX = 2000;
+const CANDLE_BUCKET_SECS = 10; // 10 real-seconds per candle (≈10 sim-minutes at 60× speed)
+
+export function getPriceHistoryCandles(ticker: string): Candle[] {
+  const ticks = _priceHistory.get(ticker);
+  if (!ticks || ticks.length === 0) return [];
+
+  const buckets = new Map<number, { open: number; high: number; low: number; close: number }>();
+  for (const tick of ticks) {
+    const t = Math.floor(tick.time / CANDLE_BUCKET_SECS) * CANDLE_BUCKET_SECS;
+    const b = buckets.get(t);
+    if (!b) {
+      buckets.set(t, { open: tick.price, high: tick.price, low: tick.price, close: tick.price });
+    } else {
+      if (tick.price > b.high) b.high = tick.price;
+      if (tick.price < b.low)  b.low  = tick.price;
+      b.close = tick.price;
+    }
+  }
+
+  return Array.from(buckets.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([time, o]) => ({ time, open: o.open, high: o.high, low: o.low, close: o.close, volume: 0 }));
+}
+
+// --------------------------------------------------------------------------- //
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [priceUpdates, setPriceUpdates] = useState<Record<string, PriceUpdate>>({});
   const [marketEvents, setMarketEvents] = useState<MarketEvent[]>([]);
@@ -43,6 +79,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     function onPrice(payload: unknown) {
       const p = payload as PriceUpdate;
       setPriceUpdates((prev) => ({ ...prev, [p.ticker]: p }));
+
+      // Accumulate into module-level history for the chart
+      if (!_priceHistory.has(p.ticker)) _priceHistory.set(p.ticker, []);
+      const arr = _priceHistory.get(p.ticker)!;
+      arr.push({ time: Math.floor(Date.now() / 1000), price: p.price });
+      if (arr.length > PRICE_HISTORY_MAX) arr.splice(0, arr.length - PRICE_HISTORY_MAX);
     }
 
     function onOrder(payload: unknown) {
