@@ -1,7 +1,9 @@
 import axios from "axios";
 import {
   clearAuthenticated,
+  clearCurrentUserId,
   markAuthenticated,
+  setCurrentUserId,
 } from "@/shared/lib/auth";
 import { mapAuthResponse } from "@/features/auth/utils/authMappers";
 import { authRepository } from "./authRepository";
@@ -33,6 +35,7 @@ export const authManager = {
       });
       const result = mapAuthResponse(response.data);
       markAuthenticated();
+      if (result.user?.id) setCurrentUserId(result.user.id);
       return result;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
@@ -51,6 +54,7 @@ export const authManager = {
       });
       const result = mapAuthResponse(response.data);
       markAuthenticated();
+      if (result.user?.id) setCurrentUserId(result.user.id);
       return result;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
@@ -62,6 +66,7 @@ export const authManager = {
       await authRepository.logout();
     } finally {
       clearAuthenticated();
+      clearCurrentUserId();
     }
   },
 };

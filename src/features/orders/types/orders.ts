@@ -49,9 +49,10 @@ export interface OrdersQueryParams {
 }
 
 export interface PaginationDto {
-  page: number;
+  current_page: number;
   limit: number;
-  total: number;
+  total_records: number;
+  total_pages: number;
 }
 
 export interface OrdersResponseDto {

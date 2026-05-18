@@ -11,8 +11,8 @@ export function useInfiniteOrders(status?: OrderStatus) {
       ordersManager.getOrders({ status, page: pageParam as number, limit: PAGE_SIZE }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
-      const { page, limit, total } = lastPage.pagination;
-      return (page + 1) * limit < total ? page + 1 : undefined;
+      const { current_page, total_pages } = lastPage.pagination;
+      return current_page + 1 < total_pages ? current_page + 1 : undefined;
     },
   });
 }

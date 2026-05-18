@@ -2,21 +2,25 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Activity, Bot, CheckCircle2, PlayCircle, StopCircle,
-  XCircle, Repeat2, DollarSign, TrendingUp, Wallet,
+  Repeat2, DollarSign, TrendingUp, Wallet, Zap,
 } from "lucide-react";
 import { FadeIn } from "@/shared/components/FadeIn";
 import { useBotStatus } from "@/features/bot-trading/hooks/useBotStatus";
 import { useNotifications } from "@/providers/NotificationProvider";
 import { useWalletBalance } from "@/features/wallet/hooks/useWalletBalance";
 import { wsClient } from "@/shared/lib/ws/wsClient";
+import { getCurrentUserId } from "@/shared/lib/auth";
 import { BotProgressChart } from "./BotProgressChart";
+import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
 
 // ─── Log ────────────────────────────────────────────────────────────────────
 
 type LogEntry = { id: number; time: string; message: string; type: "fill" | "cancel" | "info" };
-type StoredLogState = { log: LogEntry[]; fillsCount: number; cancelsCount: number };
+type StoredLogState = { log: LogEntry[]; fillsCount: number; cancelsCount: number; pumpsCount: number };
 
-export const BOT_LOG_STORAGE_KEY = "bot_log_v1";
+export function getBotLogStorageKey() {
+  return `bot_log_v1_${getCurrentUserId()}`;
+}
 
 const INITIAL_LOG: LogEntry[] = [
   { id: 0, time: "", message: "Bot dashboard loaded. Start the bot to begin trading.", type: "info" },
@@ -36,14 +40,15 @@ function formatOrderUpdate(p: OrderUpdatePayload): { message: string; type: LogE
   const id = p.order_id?.slice(0, 8) ?? "?";
   const ticker = p.instrument_id ?? "";
   const side = p.side ?? "";
-  const orderType = p.order_type ?? "";
+  const orderType = p.order_type || (p as any).orderType || "";
+  const instrumentId = p.instrument_id || (p as any).instrumentId || "";
   const isPump = orderType === "LIMIT" && side === "BUY";
   const price = Number(p.average_fill_price).toFixed(2);
   const qty = p.filled_quantity;
   const typeTag = orderType ? ` [${orderType}]` : "";
 
-  const tradeStr = ticker && side
-    ? `${side} ${qty} ${ticker} @ $${price}${typeTag}`
+  const tradeStr = instrumentId && side
+    ? `${side} ${qty} ${instrumentId} @ $${price}${typeTag}`
     : `${qty} units @ $${price}${typeTag}`;
 
   switch (p.status) {
@@ -58,13 +63,14 @@ function formatOrderUpdate(p: OrderUpdatePayload): { message: string; type: LogE
         type: "fill",
       };
     case "CANCELLED":
-      if (isPump && ticker) return { message: `[PUMP] Spoof order for ${ticker} cancelled`, type: "cancel" };
-      return { message: `Order ${id} cancelled${ticker ? ` (${ticker}${side ? ` ${side}` : ""})` : ""}`, type: "cancel" };
+      if (isPump && instrumentId) return { message: `[PUMP] Spoof order for ${instrumentId} cancelled`, type: "cancel" };
+      return { message: `Order ${id} cancelled${instrumentId ? ` (${instrumentId}${side ? ` ${side}` : ""})` : ""}`, type: "cancel" };
     case "REJECTED":
-      return { message: `Order ${id} rejected${ticker ? ` (${ticker})` : ""}`, type: "cancel" };
+      return { message: `Order ${id} rejected${instrumentId ? ` (${instrumentId})` : ""}`, type: "cancel" };
     case "EXPIRED":
-      return { message: `Order ${id} expired${ticker ? ` (${ticker})` : ""}`, type: "cancel" };
+      return { message: `Order ${id} expired${instrumentId ? ` (${instrumentId})` : ""}`, type: "cancel" };
     default:
+      if (isPump && instrumentId) return { message: `[PUMP] Spoof order placed for ${instrumentId}`, type: "fill" };
       return { message: `Order ${id} → ${p.status}`, type: "info" };
   }
 }
@@ -73,18 +79,19 @@ function fmt(n: number) { return n.toLocaleString("en-US", { minimumFractionDigi
 
 function readLogState(): StoredLogState & { nextId: number } {
   try {
-    const raw = localStorage.getItem(BOT_LOG_STORAGE_KEY);
+    const raw = localStorage.getItem(getBotLogStorageKey());
     if (raw) {
       const saved = JSON.parse(raw) as StoredLogState;
       if (saved?.log && Array.isArray(saved.log)) {
         return {
           ...saved,
+          pumpsCount: saved.pumpsCount ?? 0,
           nextId: saved.log.length > 0 ? Math.max(...saved.log.map((e) => e.id)) + 1 : 1,
         };
       }
     }
   } catch {}
-  return { log: INITIAL_LOG, fillsCount: 0, cancelsCount: 0, nextId: 1 };
+  return { log: INITIAL_LOG, fillsCount: 0, cancelsCount: 0, pumpsCount: 0, nextId: 1 };
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -92,7 +99,7 @@ function readLogState(): StoredLogState & { nextId: number } {
 type Props = { onDeactivate: () => void };
 
 export function BotDashboard({ onDeactivate }: Props) {
-  const { running, isLoading, isMutating, start, stop, startingSum, currentCash, positions } = useBotStatus();
+  const { running, isLoading, isMutating, start, stop, startingSum, currentCash, positions, spoofCommitted } = useBotStatus();
   const queryClient = useQueryClient();
   const { priceUpdates } = useNotifications();
   const { data: walletData } = useWalletBalance("USD");
@@ -111,13 +118,14 @@ export function BotDashboard({ onDeactivate }: Props) {
 
   const [fillsCount, setFillsCount]    = useState(() => readLogState().fillsCount);
   const [cancelsCount, setCancelsCount] = useState(() => readLogState().cancelsCount);
+  const [pumpsCount, setPumpsCount]     = useState(() => readLogState().pumpsCount);
   const [log, setLog] = useState<LogEntry[]>(() => readLogState().log);
   const idRef = useRef(readLogState().nextId);
 
   // Persist log on every change
   useEffect(() => {
-    localStorage.setItem(BOT_LOG_STORAGE_KEY, JSON.stringify({ log, fillsCount, cancelsCount }));
-  }, [log, fillsCount, cancelsCount]);
+    localStorage.setItem(getBotLogStorageKey(), JSON.stringify({ log, fillsCount, cancelsCount, pumpsCount }));
+  }, [log, fillsCount, cancelsCount, pumpsCount]);
 
   // WS subscription
   useEffect(() => {
@@ -127,8 +135,12 @@ export function BotDashboard({ onDeactivate }: Props) {
       const { message, type } = formatOrderUpdate(p);
       const entry: LogEntry = { id: idRef.current++, time: nowTime(), message, type };
       setLog((prev) => [entry, ...prev].slice(0, 200));
+      const orderType = p.order_type || (p as any).orderType || "";
+      const side = p.side ?? "";
+      const isPumpOrder = orderType === "LIMIT" && side === "BUY";
       if (p.status === "FILLED" || p.status === "PARTIALLY_FILLED") setFillsCount((n) => n + 1);
       else if (["CANCELLED", "REJECTED", "EXPIRED"].includes(p.status)) setCancelsCount((n) => n + 1);
+      if (isPumpOrder && p.status === "PENDING") setPumpsCount((n) => n + 1);
     };
     wsClient.subscribe("ORDER_UPDATE", handler);
     return () => wsClient.unsubscribe("ORDER_UPDATE", handler);
@@ -259,9 +271,9 @@ export function BotDashboard({ onDeactivate }: Props) {
   ];
 
   const logStats = [
-    { label: "Fills",    value: fillsCount,              icon: CheckCircle2, color: "text-primary",       bg: "bg-primary/10" },
-    { label: "Cancels",  value: cancelsCount,             icon: XCircle,      color: cancelsCount > 0 ? "text-destructive" : "text-muted-foreground", bg: cancelsCount > 0 ? "bg-destructive/10" : "bg-muted" },
-    { label: "Total",    value: fillsCount + cancelsCount, icon: Repeat2,     color: "text-chart-2",       bg: "bg-chart-2/10" },
+    { label: "Fills", value: fillsCount,              icon: CheckCircle2, color: "text-primary",                                                  bg: "bg-primary/10" },
+    { label: "Pumps", value: pumpsCount,              icon: Zap,          color: pumpsCount > 0 ? "text-amber-500" : "text-muted-foreground",     bg: pumpsCount > 0 ? "bg-amber-500/10" : "bg-muted" },
+    { label: "Total", value: fillsCount + pumpsCount, icon: Repeat2,      color: "text-chart-2",                                                  bg: "bg-chart-2/10" },
   ];
 
   return (
@@ -461,11 +473,23 @@ export function BotDashboard({ onDeactivate }: Props) {
       </div>
 
       <FadeIn delay={250}>
-        <BotProgressChart
-          running={running}
-          currentCash={currentCash}
-          livePositionsValue={livePositionsValue}
-        />
+        <ErrorBoundary
+          fallback={
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="mb-3 text-sm font-semibold">Bot Progress</p>
+              <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
+                Chart unavailable
+              </div>
+            </div>
+          }
+        >
+          <BotProgressChart
+            running={running}
+            currentCash={currentCash}
+            livePositionsValue={livePositionsValue}
+            spoofCommitted={spoofCommitted}
+          />
+        </ErrorBoundary>
       </FadeIn>
 
       <FadeIn delay={300}>
@@ -480,7 +504,7 @@ export function BotDashboard({ onDeactivate }: Props) {
                 </span>
               )}
               <button
-                onClick={() => { setLog([]); setFillsCount(0); setCancelsCount(0); idRef.current = 1; localStorage.removeItem(BOT_LOG_STORAGE_KEY); }}
+                onClick={() => { setLog([]); setFillsCount(0); setCancelsCount(0); setPumpsCount(0); idRef.current = 1; localStorage.removeItem(getBotLogStorageKey()); }}
                 className="text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 Clear

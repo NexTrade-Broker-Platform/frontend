@@ -1,16 +1,19 @@
 import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { botRepository, type BotPosition } from "../services/botRepository";
+import { getCurrentUserId } from "@/shared/lib/auth";
 
 export type { BotPosition };
 
-const STATS_CACHE_KEY = "bot_stats_cache_v1";
+function getStatsCacheKey() {
+  return `bot_stats_cache_v1_${getCurrentUserId()}`;
+}
 
 type CachedStats = { startingSum: number; currentCash: number };
 
 function readCachedStats(): CachedStats {
   try {
-    const raw = localStorage.getItem(STATS_CACHE_KEY);
+    const raw = localStorage.getItem(getStatsCacheKey());
     if (raw) return JSON.parse(raw) as CachedStats;
   } catch {}
   return { startingSum: 0, currentCash: 0 };
@@ -32,7 +35,7 @@ export function useBotStatus() {
     if (data?.starting_sum != null && data.starting_sum > 0) {
       const updated = { startingSum: data.starting_sum, currentCash: data.current_cash ?? 0 };
       cachedRef.current = updated;
-      localStorage.setItem(STATS_CACHE_KEY, JSON.stringify(updated));
+      localStorage.setItem(getStatsCacheKey(), JSON.stringify(updated));
     }
   }, [data?.starting_sum, data?.current_cash]);
 
@@ -59,6 +62,7 @@ export function useBotStatus() {
     isLoading,
     startingSum,
     currentCash,
+    spoofCommitted: data?.spoof_committed ?? 0,
     positions: data?.positions ?? {},
     start: (startingSum: number) => startMutation.mutate(startingSum),
     stop: () => stopMutation.mutate(),
